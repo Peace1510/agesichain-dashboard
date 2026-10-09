@@ -48,6 +48,8 @@ export interface ShipmentMeta {
   name: string;
   origin: string;
   destination: string;
+  destinationLat?: number;
+  destinationLng?: number;
 }
 
 /** Full shape of the singleton store. */
@@ -74,9 +76,13 @@ export interface StoreState {
   /**
    * Whether the buzzer was manually silenced by the dashboard operator.
    * If true, the server will NOT re-activate it even if conditions warrant it,
-   * until the next fresh threshold breach.
+   * until conditions return to nominal or the operator re-arms it.
    */
   buzzerSilenced: boolean;
+  /**
+   * Manual override test mode (null = normal auto logic, true = test on, false = test off).
+   */
+  buzzerManualOverride?: boolean | null;
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -94,14 +100,16 @@ const DEFAULT_ETA_HOURS = 2.5;
  * If the vaccine is projected to become unviable within this window,
  * the server will command the ESP32 to activate its buzzer.
  */
-export const BUZZER_ALERT_THRESHOLD_HOURS = 0.5; // 30 minutes
+export const BUZZER_ALERT_THRESHOLD_HOURS = 1.0; // 1 hour alert window
 
 /** Default shipment metadata — to be updated via the API when a shipment starts. */
 const DEFAULT_META: ShipmentMeta = {
-  id: "—",
-  name: "Awaiting Device Connection",
-  origin: "—",
-  destination: "—",
+  id: "COV-902",
+  name: "Active Vaccine Transit",
+  origin: "Cold Hub, Pune",
+  destination: "District Hospital, Mumbai",
+  destinationLat: 18.9822,
+  destinationLng: 72.8335,
 };
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -119,6 +127,7 @@ function createInitialState(): StoreState {
     shipmentMeta: { ...DEFAULT_META },
     buzzerActive: false,
     buzzerSilenced: false,
+    buzzerManualOverride: null,
   };
 }
 
@@ -152,13 +161,39 @@ function recomputeSnapshot(): void {
     _state.destinationEtaHours
   );
 
-  // Auto-activate buzzer if time-to-spoil drops within the alert window
-  // and the operator has not manually silenced it.
-  if (!_state.buzzerSilenced) {
-    const tts = _state.currentSnapshot.time_to_spoil_hours;
-    if (tts <= BUZZER_ALERT_THRESHOLD_HOURS) {
+  const latest = _state.readings[_state.readings.length - 1];
+  const currentTemp = latest?.temperature ?? 4.0;
+
+  // Thermal excursion: outside WHO 2°C – 8°C cold chain envelope
+  const isThermalExcursion = currentTemp > 8.0 || currentTemp < 2.0;
+
+  // Spoilage risk: time-to-spoil is shorter than transit ETA, or under threshold window
+  const tts = _state.currentSnapshot.time_to_spoil_hours;
+  const isSpoilRisk = tts <= _state.destinationEtaHours || tts <= BUZZER_ALERT_THRESHOLD_HOURS;
+
+  // Status check: any non-nominal status is an alert
+  const isStatusAlert = _state.currentSnapshot.evaluation.status !== "NOMINAL";
+
+  const isAlarmTriggered = isThermalExcursion || isSpoilRisk || isStatusAlert;
+
+  if (!isAlarmTriggered) {
+    // If all safe & nominal, auto-reset the silence latch and silence buzzer
+    _state.buzzerSilenced = false;
+    _state.buzzerActive = false;
+  } else {
+    // Breach is active: sound buzzer unless manually silenced by operator
+    if (!_state.buzzerSilenced) {
       _state.buzzerActive = true;
+    } else {
+      _state.buzzerActive = false;
     }
+  }
+
+  // Operator manual override takes absolute precedence if set
+  if (_state.buzzerManualOverride === true) {
+    _state.buzzerActive = true;
+  } else if (_state.buzzerManualOverride === false) {
+    _state.buzzerActive = false;
   }
 }
 
@@ -210,28 +245,48 @@ export function setEta(hours: number): void {
 }
 
 /**
- * Update shipment metadata (name, origin, destination, id).
+ * Update shipment metadata (name, origin, destination, id, coordinates).
  */
 export function setShipmentMeta(meta: Partial<ShipmentMeta>): void {
   _state.shipmentMeta = { ..._state.shipmentMeta, ...meta };
+  recomputeSnapshot();
 }
 
 /**
  * Silence the buzzer from the dashboard.
  * Sets buzzerActive to false and buzzerSilenced to true so it won't
- * re-trigger until a new threshold breach after a reset.
+ * re-trigger until manual re-arm or conditions return to safe.
  */
 export function silenceBuzzer(): void {
   _state.buzzerActive = false;
   _state.buzzerSilenced = true;
+  _state.buzzerManualOverride = null;
 }
 
 /**
- * Re-arm the buzzer (clears the silenced flag so future threshold
- * breaches can trigger it again).
+ * Re-arm the buzzer (clears the silenced flag so future or existing
+ * threshold breaches immediately trigger it again).
  */
 export function rearmBuzzer(): void {
   _state.buzzerSilenced = false;
+  _state.buzzerManualOverride = null;
+  recomputeSnapshot();
+}
+
+/**
+ * Test buzzer manually from the dashboard.
+ */
+export function testBuzzer(): void {
+  _state.buzzerManualOverride = true;
+  _state.buzzerActive = true;
+}
+
+/**
+ * Clear manual test override.
+ */
+export function clearManualOverride(): void {
+  _state.buzzerManualOverride = null;
+  recomputeSnapshot();
 }
 
 // ─────────────────────────────────────────────────────────────────────────────

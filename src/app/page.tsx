@@ -8,6 +8,8 @@ import TelemetryCharts from "@/components/TelemetryCharts";
 import KineticParametersCard from "@/components/KineticParametersCard";
 import TelemetryTable from "@/components/TelemetryTable";
 import LiveMap from "@/components/LiveMap";
+import BuzzerControlCard from "@/components/BuzzerControlCard";
+import DestinationConfigCard from "@/components/DestinationConfigCard";
 import type { ColdChainSnapshot, ShipmentStatus } from "@/lib/kinetics";
 import { arrheniusRateConstant } from "@/lib/kinetics";
 import type { TelemetryReading, ShipmentMeta } from "@/lib/store";
@@ -30,10 +32,12 @@ export default function ColdChainDashboardPage() {
   const [snapshot, setSnapshot] = useState<ColdChainSnapshot | null>(null);
   const [readings, setReadings] = useState<TelemetryReading[]>([]);
   const [meta, setMeta] = useState<ShipmentMeta>({
-    id: "—",
-    name: "Awaiting Device Connection",
-    origin: "—",
-    destination: "—",
+    id: "COV-902",
+    name: "Active Vaccine Transit",
+    origin: "Cold Hub, Pune",
+    destination: "District Hospital, Mumbai",
+    destinationLat: 18.9822,
+    destinationLng: 72.8335,
   });
   const [etaHours, setEtaHours] = useState<number>(2.5);
   const [lastUpdated, setLastUpdated] = useState<number | null>(null);
@@ -41,6 +45,7 @@ export default function ColdChainDashboardPage() {
   const [isConnected, setIsConnected] = useState<boolean>(false);
   const [buzzerActive, setBuzzerActive] = useState<boolean>(false);
   const [buzzerLoading, setBuzzerLoading] = useState<boolean>(false);
+  const [routeUpdating, setRouteUpdating] = useState<boolean>(false);
 
   const isMountedRef = useRef(true);
 
@@ -68,8 +73,8 @@ export default function ColdChainDashboardPage() {
     }
   }, []);
 
-  // Silence or re-arm the buzzer from the dashboard
-  const handleBuzzerControl = async (action: "silence" | "rearm") => {
+  // Silence, re-arm, or test the buzzer from the dashboard
+  const handleBuzzerControl = async (action: "silence" | "rearm" | "test" | "stop_test") => {
     setBuzzerLoading(true);
     try {
       const res = await fetch("/api/buzzer", {
@@ -83,10 +88,37 @@ export default function ColdChainDashboardPage() {
           setBuzzerActive(data.buzzer_active);
         }
       }
+      fetchTelemetry();
     } catch (err) {
       console.error("Buzzer control failed", err);
     } finally {
       setBuzzerLoading(false);
+    }
+  };
+
+  // Update Route Destination and Transit ETA
+  const handleUpdateRoute = async (newEta: number, newMeta: Partial<ShipmentMeta>) => {
+    setRouteUpdating(true);
+    try {
+      const res = await fetch("/api/telemetry", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          eta_hours: newEta,
+          meta: newMeta,
+        }),
+      });
+      if (res.ok) {
+        const data = await res.json();
+        if (typeof data.eta_hours === "number") setEtaHours(data.eta_hours);
+        if (data.meta) setMeta(data.meta);
+        if (data.snapshot) setSnapshot(data.snapshot);
+      }
+      fetchTelemetry();
+    } catch (err) {
+      console.error("Route update failed", err);
+    } finally {
+      setRouteUpdating(false);
     }
   };
 
@@ -153,22 +185,22 @@ export default function ColdChainDashboardPage() {
 
       {/* 3. BUZZER ALERT BANNER */}
       {buzzerActive && (
-        <div className="glass scan-line rounded-2xl p-5 border border-orange-500/50 bg-orange-950/30 flex items-start gap-4 glow-critical animate-in fade-in duration-300">
-          <div className="h-10 w-10 rounded-xl bg-orange-500/20 border border-orange-500/40 flex items-center justify-center flex-shrink-0 text-orange-400">
+        <div className="glass scan-line rounded-2xl p-5 border border-orange-500/60 bg-orange-950/40 flex items-start gap-4 glow-critical animate-in fade-in duration-300">
+          <div className="h-10 w-10 rounded-xl bg-orange-500/20 border border-orange-500/50 flex items-center justify-center flex-shrink-0 text-orange-400">
             <Bell className="h-6 w-6 animate-bounce" />
           </div>
           <div className="flex-1">
-            <h3 className="text-sm font-bold text-orange-200 uppercase tracking-wider">
-              ⚠ BUZZER ACTIVE — VACCINE DECAY ALERT (≤ 30 min to spoil)
+            <h3 className="text-sm font-bold text-orange-200 uppercase tracking-wider flex items-center gap-2">
+              ⚠ BUZZER ACTIVE — TEMPERATURE EXCURSION / SPOILAGE HAZARD
             </h3>
             <p className="mt-1 text-xs text-orange-300/90 leading-relaxed">
-              The ESP32 buzzer has been activated. Time-to-spoil has fallen within the 30-minute critical window. Take immediate action to restore cold chain conditions.
+              The physical ESP32 buzzer on GPIO 32 is actively buzzing! Chamber temperature is {currentTemp !== null ? currentTemp.toFixed(1) + "°C" : "—"} (outside safe WHO 2°C – 8°C cold chain envelope). Click &quot;Silence Buzzer&quot; to silence it remotely from the website.
             </p>
           </div>
           <button
             onClick={() => handleBuzzerControl("silence")}
             disabled={buzzerLoading}
-            className="flex items-center gap-2 px-4 py-2 rounded-xl bg-orange-900/60 hover:bg-orange-800/60 border border-orange-700/50 hover:border-orange-500 text-orange-200 font-semibold text-xs transition-all cursor-pointer disabled:opacity-50"
+            className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-orange-600 hover:bg-orange-500 border border-orange-400 text-white font-bold text-xs transition-all cursor-pointer disabled:opacity-50 shadow-lg shadow-orange-950/60 active:scale-95"
           >
             <BellOff className="h-4 w-4" />
             Silence Buzzer
@@ -354,11 +386,33 @@ export default function ColdChainDashboardPage() {
         </div>
       </div>
 
-      {/* 6. REAL-TIME CHARTS */}
-      <TelemetryCharts readings={readings} />
+      {/* 6. HARDWARE BUZZER REMOTE & SHIPMENT ROUTE PLANNER */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 items-stretch">
+        <DestinationConfigCard
+          meta={meta}
+          etaHours={etaHours}
+          timeToSpoil={timeToSpoil}
+          onUpdateRoute={handleUpdateRoute}
+          loading={routeUpdating}
+        />
+        <BuzzerControlCard
+          buzzerActive={buzzerActive}
+          currentTemp={currentTemp}
+          status={status}
+          onBuzzerAction={handleBuzzerControl}
+          loading={buzzerLoading}
+        />
+      </div>
 
       {/* 7. LIVE GPS MAP */}
-      <LiveMap readings={readings} isConnected={isConnected} />
+      <LiveMap
+        readings={readings}
+        isConnected={isConnected}
+        destinationMeta={meta}
+      />
+
+      {/* 8. REAL-TIME TELEMETRY CHARTS */}
+      <TelemetryCharts readings={readings} />
 
       {/* 8. KINETIC ENGINE MATHEMATICS */}
       <KineticParametersCard

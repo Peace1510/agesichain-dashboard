@@ -63,30 +63,26 @@ export default function ShipmentHeader({
 
             {/* Route path */}
             <div className="mt-2.5 flex flex-wrap items-center gap-3 text-xs text-slate-400">
-              {meta.origin !== "—" && (
-                <>
-                  <span className="flex items-center gap-1 text-slate-300">
-                    <MapPin className="h-3.5 w-3.5 text-cyan-400" />
-                    <span className="text-slate-400">Origin:</span> {meta.origin}
-                  </span>
-                  <span className="text-slate-600">➔</span>
-                </>
-              )}
-              {meta.destination !== "—" && (
-                <span className="flex items-center gap-1 text-slate-300">
-                  <Truck className="h-3.5 w-3.5 text-emerald-400" />
-                  <span className="text-slate-400">Destination:</span> {meta.destination}
+              <span className="flex items-center gap-1 text-slate-300">
+                <MapPin className="h-3.5 w-3.5 text-cyan-400" />
+                <span className="text-slate-400">Origin:</span>{" "}
+                <span className="font-semibold text-slate-200">
+                  {meta.origin !== "—" ? meta.origin : "Cold Hub, Pune"}
                 </span>
-              )}
-              {meta.destination !== "—" && (
-                <>
-                  <span className="text-slate-600">·</span>
-                  <span className="flex items-center gap-1 text-slate-300 mono">
-                    <Clock className="h-3.5 w-3.5 text-amber-400" />
-                    <span>ETA:</span> {etaHours.toFixed(1)} hrs
-                  </span>
-                </>
-              )}
+              </span>
+              <span className="text-slate-600">➔</span>
+              <span className="flex items-center gap-1 text-slate-300">
+                <Truck className="h-3.5 w-3.5 text-emerald-400" />
+                <span className="text-slate-400">Destination:</span>{" "}
+                <span className="font-semibold text-emerald-300">
+                  {meta.destination !== "—" ? meta.destination : "District Hospital, Mumbai"}
+                </span>
+              </span>
+              <span className="text-slate-600">·</span>
+              <span className="flex items-center gap-1 text-slate-300 mono">
+                <Clock className="h-3.5 w-3.5 text-amber-400" />
+                <span>ETA:</span> {etaHours.toFixed(1)} hrs
+              </span>
             </div>
           </div>
         </div>

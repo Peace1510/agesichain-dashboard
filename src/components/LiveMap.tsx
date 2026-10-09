@@ -1,88 +1,179 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
-import type { TelemetryReading } from "@/lib/store";
-import { MapPin, Navigation, Satellite } from "lucide-react";
+import { useEffect, useRef, useState, useCallback } from "react";
+import type { TelemetryReading, ShipmentMeta } from "@/lib/store";
+import {
+  MapPin,
+  Navigation,
+  Satellite,
+  Layers,
+  Crosshair,
+  Compass,
+  CheckCircle2,
+} from "lucide-react";
+import "maplibre-gl/dist/maplibre-gl.css";
 
 interface LiveMapProps {
   readings: TelemetryReading[];
   isConnected: boolean;
+  destinationMeta?: ShipmentMeta;
 }
 
-/**
- * LiveMap — renders a Krutrim (Ola Maps) interactive map showing the
- * real-time position of the vaccine transport container.
- *
- * The map is initialised once on mount. On every subsequent render where
- * the latest GPS coordinate has changed, we smoothly move the marker to
- * the new position without re-creating the map instance.
- *
- * The SDK is loaded via dynamic import inside useEffect to prevent
- * Next.js SSR from attempting to run browser-only WebGL code on the server.
- */
-export default function LiveMap({ readings, isConnected }: LiveMapProps) {
+type MapTheme = "dark" | "satellite" | "streets";
+
+const MAP_STYLES: Record<MapTheme, { name: string; style: unknown }> = {
+  dark: {
+    name: "Dark Matter (Agesichain HD)",
+    style: {
+      version: 8,
+      sources: {
+        "carto-dark": {
+          type: "raster",
+          tiles: [
+            "https://a.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}@2x.png",
+            "https://b.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}@2x.png",
+            "https://c.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}@2x.png",
+            "https://d.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}@2x.png",
+          ],
+          tileSize: 256,
+          attribution: "&copy; OpenStreetMap contributors &copy; CARTO",
+        },
+      },
+      layers: [
+        {
+          id: "carto-dark-layer",
+          type: "raster",
+          source: "carto-dark",
+          minzoom: 0,
+          maxzoom: 20,
+        },
+      ],
+    },
+  },
+  satellite: {
+    name: "Satellite Imagery (Esri)",
+    style: {
+      version: 8,
+      sources: {
+        satellite: {
+          type: "raster",
+          tiles: [
+            "https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}",
+          ],
+          tileSize: 256,
+          attribution: "&copy; Esri, Maxar, Earthstar Geographics",
+        },
+      },
+      layers: [
+        {
+          id: "satellite-layer",
+          type: "raster",
+          source: "satellite",
+          minzoom: 0,
+          maxzoom: 19,
+        },
+      ],
+    },
+  },
+  streets: {
+    name: "Standard Street (OSM)",
+    style: {
+      version: 8,
+      sources: {
+        osm: {
+          type: "raster",
+          tiles: ["https://tile.openstreetmap.org/{z}/{x}/{y}.png"],
+          tileSize: 256,
+          attribution: "&copy; OpenStreetMap contributors",
+        },
+      },
+      layers: [
+        {
+          id: "osm-layer",
+          type: "raster",
+          source: "osm",
+          minzoom: 0,
+          maxzoom: 19,
+        },
+      ],
+    },
+  },
+};
+
+export default function LiveMap({
+  readings,
+  isConnected,
+  destinationMeta,
+}: LiveMapProps) {
   const mapContainerRef = useRef<HTMLDivElement>(null);
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const mapRef = useRef<any>(null);
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const markerRef = useRef<any>(null);
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const destMarkerRef = useRef<any>(null);
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const pathSourceRef = useRef<any>(null);
-  const [mapError, setMapError] = useState<string | null>(null);
   const [mapLoaded, setMapLoaded] = useState(false);
+  const [mapTheme, setMapTheme] = useState<MapTheme>("dark");
   const prevCoordsRef = useRef<{ lat: number; lng: number } | null>(null);
 
-  // Coordinates from the latest reading
+  // Latest coordinates from telemetry
   const latestReading = readings.length > 0 ? readings[readings.length - 1] : null;
   const lat = latestReading?.latitude ?? null;
   const lng = latestReading?.longitude ?? null;
   const speed = latestReading?.speed_kmh ?? 0;
+  const temp = latestReading?.temperature ?? null;
 
-  // Collect the last 60 points for the trail path
+  // Trail: last 60 readings
   const trailReadings = readings.slice(-60);
 
-  const apiKey = process.env.NEXT_PUBLIC_OLA_MAPS_API_KEY ?? "";
+  // Recenter camera on the live container location
+  const handleRecenter = useCallback(() => {
+    if (!mapRef.current) return;
+    if (lat !== null && lng !== null) {
+      mapRef.current.flyTo({
+        center: [lng, lat],
+        zoom: 15,
+        duration: 1000,
+        essential: true,
+      });
+    }
+  }, [lat, lng]);
 
-  // ── Initialise map (runs once after mount) ───────────────────────────────
+  // ── Initialise MapLibre Map ──────────────────────────────────────────────
   useEffect(() => {
     if (!mapContainerRef.current) return;
-    if (mapRef.current) return; // already initialised
-    if (!apiKey || apiKey === "YOUR_KRUTRIM_API_KEY_HERE") {
-      setMapError("Krutrim Maps API key is not configured. Add it to .env.local.");
-      return;
-    }
+    if (mapRef.current) return;
 
     let cancelled = false;
 
     (async () => {
       try {
-        const { OlaMaps } = await import("olamaps-web-sdk");
-
+        const { Map, NavigationControl } = await import("maplibre-gl");
         if (cancelled || !mapContainerRef.current) return;
 
-        const olaMaps = new OlaMaps({ apiKey });
-
-        // Default center: India — will be updated as soon as first coords arrive
         const initialCenter: [number, number] =
-          lat !== null && lng !== null ? [lng, lat] : [78.9629, 20.5937];
+          lat !== null && lng !== null ? [lng, lat] : [73.8567, 18.5204]; // Pune default
 
-        const mapInit = olaMaps.init({
-          style:
-            "https://api.olamaps.io/tiles/vector/v1/styles/default-dark-standard/style.json",
+        const map = new Map({
           container: mapContainerRef.current,
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          style: MAP_STYLES[mapTheme].style as any,
           center: initialCenter,
-          zoom: lat !== null ? 15 : 4,
+          zoom: lat !== null ? 15 : 12,
           attributionControl: false,
         });
 
-        // init() may return the map directly or a Promise — handle both
-        const map = mapInit instanceof Promise ? await mapInit : mapInit;
-        mapRef.current = map;
+        map.addControl(
+          new NavigationControl({ showCompass: true, showZoom: true }),
+          "bottom-right"
+        );
 
         map.on("load", () => {
           if (cancelled) return;
 
-          // ── Path trail source & layer ──────────────────────────────────
+          // Trail GeoJSON line source
           map.addSource("trail", {
             type: "geojson",
             data: {
@@ -91,6 +182,24 @@ export default function LiveMap({ readings, isConnected }: LiveMapProps) {
             },
           });
 
+          // Glow outer line
+          map.addLayer({
+            id: "trail-glow",
+            type: "line",
+            source: "trail",
+            layout: {
+              "line-join": "round",
+              "line-cap": "round",
+            },
+            paint: {
+              "line-color": "#06b6d4",
+              "line-width": 8,
+              "line-opacity": 0.35,
+              "line-blur": 3,
+            },
+          });
+
+          // Core bright line
           map.addLayer({
             id: "trail-line",
             type: "line",
@@ -101,8 +210,8 @@ export default function LiveMap({ readings, isConnected }: LiveMapProps) {
             },
             paint: {
               "line-color": "#22d3ee",
-              "line-width": 3,
-              "line-opacity": 0.7,
+              "line-width": 3.5,
+              "line-opacity": 0.95,
             },
           });
 
@@ -110,114 +219,214 @@ export default function LiveMap({ readings, isConnected }: LiveMapProps) {
           setMapLoaded(true);
         });
 
-        // ── Add marker ─────────────────────────────────────────────────
-        if (lat !== null && lng !== null) {
-          const marker = olaMaps
-            .addMarker({
-              color: "#22d3ee",
-              draggable: false,
-            })
-            .setLngLat([lng, lat])
-            .addTo(map);
-
-          markerRef.current = marker;
-          prevCoordsRef.current = { lat, lng };
-        }
+        mapRef.current = map;
       } catch (err) {
-        if (!cancelled) {
-          console.error("Map init error:", err);
-          setMapError("Failed to load Krutrim Maps. Check your API key and network.");
-        }
+        console.error("MapLibre init error:", err);
       }
     })();
 
     return () => {
       cancelled = true;
-      // Cleanup on unmount
       if (mapRef.current) {
         mapRef.current.remove();
         mapRef.current = null;
         markerRef.current = null;
+        destMarkerRef.current = null;
         pathSourceRef.current = null;
       }
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [apiKey]); // only re-init if API key changes
+  }, []);
 
-  // ── Update marker & trail on every new coordinate ───────────────────────
+  // ── Switch Map Style Theme ──────────────────────────────────────────────
+  const handleThemeChange = (newTheme: MapTheme) => {
+    setMapTheme(newTheme);
+    if (!mapRef.current) return;
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    mapRef.current.setStyle(MAP_STYLES[newTheme].style as any);
+    mapRef.current.once("style.load", () => {
+      // Re-add trail source and layer when style switches
+      if (!mapRef.current.getSource("trail")) {
+        mapRef.current.addSource("trail", {
+          type: "geojson",
+          data: {
+            type: "FeatureCollection",
+            features: [],
+          },
+        });
+        mapRef.current.addLayer({
+          id: "trail-line",
+          type: "line",
+          source: "trail",
+          layout: { "line-join": "round", "line-cap": "round" },
+          paint: {
+            "line-color": "#22d3ee",
+            "line-width": 3.5,
+            "line-opacity": 0.95,
+          },
+        });
+        pathSourceRef.current = mapRef.current.getSource("trail");
+      }
+    });
+  };
+
+  // ── Update Container Marker & Trail on Telemetry Coordinate Changes ─────
   useEffect(() => {
     if (!mapLoaded || !mapRef.current) return;
     if (lat === null || lng === null) return;
 
     const prev = prevCoordsRef.current;
-    if (prev && prev.lat === lat && prev.lng === lng) return; // no change
+    const hasMoved = !prev || prev.lat !== lat || prev.lng !== lng;
 
-    // Move or create marker
-    if (markerRef.current) {
-      markerRef.current.setLngLat([lng, lat]);
-    } else {
-      // First coordinate arrived after map loaded
-      (async () => {
-        try {
-          const { OlaMaps } = await import("olamaps-web-sdk");
-          const olaMaps = new OlaMaps({ apiKey });
-          const marker = olaMaps
-            .addMarker({ color: "#22d3ee", draggable: false })
-            .setLngLat([lng, lat])
+    (async () => {
+      const { Marker, Popup } = await import("maplibre-gl");
+
+      // 1. Live Container Marker (Custom Glowing Radar Pulse)
+      if (!markerRef.current) {
+        const el = document.createElement("div");
+        el.className = "agesichain-container-marker cursor-pointer";
+        el.innerHTML = `
+          <div class="relative flex items-center justify-center w-10 h-10 -ml-5 -mt-5">
+            <span class="absolute w-8 h-8 rounded-full bg-cyan-400/40 animate-ping"></span>
+            <span class="absolute w-6 h-6 rounded-full bg-cyan-500/30 border border-cyan-400"></span>
+            <span class="relative w-3.5 h-3.5 rounded-full bg-cyan-400 border-2 border-white shadow-[0_0_12px_#22d3ee]"></span>
+          </div>
+        `;
+
+        const popup = new Popup({ offset: 15, closeButton: false }).setHTML(`
+          <div style="font-family: monospace; font-size: 11px; padding: 4px; color: #e2e8f0; background: #0f172a; border-radius: 6px;">
+            <div style="font-weight: bold; color: #22d3ee; margin-bottom: 2px;">📦 VACCINE SHIPMENT</div>
+            <div>Coords: ${lat.toFixed(5)}, ${lng.toFixed(5)}</div>
+            <div>Temp: <b style="color: ${temp && (temp > 8 || temp < 2) ? "#f87171" : "#34d399"}">${temp !== null ? temp.toFixed(1) + "°C" : "—"}</b></div>
+            <div>Speed: ${speed.toFixed(1)} km/h</div>
+          </div>
+        `);
+
+        const marker = new Marker({ element: el })
+          .setLngLat([lng, lat])
+          .setPopup(popup)
+          .addTo(mapRef.current);
+
+        markerRef.current = marker;
+      } else {
+        markerRef.current.setLngLat([lng, lat]);
+      }
+
+      // 2. Destination Marker (if coordinates are provided in metadata)
+      const dLat = destinationMeta?.destinationLat;
+      const dLng = destinationMeta?.destinationLng;
+      if (dLat && dLng) {
+        if (!destMarkerRef.current) {
+          const destEl = document.createElement("div");
+          destEl.innerHTML = `
+            <div class="relative flex items-center justify-center -ml-3 -mt-6">
+              <div class="px-2 py-1 bg-emerald-500 text-slate-950 font-black text-[10px] rounded shadow-lg border border-white flex items-center gap-1">
+                🏁 ${destinationMeta.destination}
+              </div>
+            </div>
+          `;
+          const dMarker = new Marker({ element: destEl })
+            .setLngLat([dLng, dLat])
             .addTo(mapRef.current);
-          markerRef.current = marker;
-        } catch {
-          // silent
+          destMarkerRef.current = dMarker;
+        } else {
+          destMarkerRef.current.setLngLat([dLng, dLat]);
         }
-      })();
-    }
+      }
 
-    // Smoothly pan to new location
-    mapRef.current.panTo([lng, lat], { duration: 800 });
+      // 3. Pan camera smoothly on significant position update
+      if (hasMoved) {
+        mapRef.current.easeTo({
+          center: [lng, lat],
+          duration: 600,
+        });
+      }
 
-    // Update trail path
-    if (pathSourceRef.current && trailReadings.length >= 2) {
-      const coords = trailReadings
-        .filter((r) => r.latitude !== 0 || r.longitude !== 0)
-        .map((r) => [r.longitude, r.latitude]);
+      // 4. Update Trail Path
+      if (pathSourceRef.current && trailReadings.length >= 2) {
+        const coords = trailReadings
+          .filter((r) => r.latitude !== 0 || r.longitude !== 0)
+          .map((r) => [r.longitude, r.latitude]);
 
-      pathSourceRef.current.setData({
-        type: "FeatureCollection",
-        features: [
-          {
-            type: "Feature",
-            geometry: { type: "LineString", coordinates: coords },
-            properties: {},
-          },
-        ],
-      });
-    }
+        pathSourceRef.current.setData({
+          type: "FeatureCollection",
+          features: [
+            {
+              type: "Feature",
+              geometry: { type: "LineString", coordinates: coords },
+              properties: {},
+            },
+          ],
+        });
+      }
 
-    prevCoordsRef.current = { lat, lng };
-  }, [lat, lng, mapLoaded, trailReadings, apiKey]);
+      prevCoordsRef.current = { lat, lng };
+    })();
+  }, [lat, lng, speed, temp, mapLoaded, trailReadings, destinationMeta]);
 
-  // ─────────────────────────────────────────────────────────────────────────
-  // RENDER
-  // ─────────────────────────────────────────────────────────────────────────
   return (
-    <div className="glass rounded-2xl overflow-hidden relative flex flex-col">
-      {/* Header */}
-      <div className="flex items-center justify-between px-5 py-4 border-b border-slate-800/80">
+    <div className="glass rounded-2xl overflow-hidden relative flex flex-col border border-slate-800/80">
+      {/* 1. Header Toolbar */}
+      <div className="flex flex-wrap items-center justify-between px-5 py-4 border-b border-slate-800/80 bg-slate-950/40 gap-3">
         <div className="flex items-center gap-2.5">
-          <MapPin className="h-5 w-5 text-cyan-400" />
-          <h2 className="text-base font-bold text-slate-100 tracking-tight">
-            Live Container Location
-          </h2>
+          <div className="h-8 w-8 rounded-lg bg-cyan-500/10 border border-cyan-500/30 flex items-center justify-center text-cyan-400">
+            <MapPin className="h-4 w-4" />
+          </div>
+          <div>
+            <h2 className="text-sm md:text-base font-bold text-slate-100 tracking-tight flex items-center gap-2">
+              Live Container Telemetric Map
+              <span className="text-[10px] font-mono px-2 py-0.5 rounded-full bg-cyan-950/80 text-cyan-400 border border-cyan-800/50">
+                HD Vector GIS
+              </span>
+            </h2>
+            <p className="text-[11px] text-slate-400">
+              Active route tracking & Real-Time GPS breadcrumb trail
+            </p>
+          </div>
         </div>
 
-        <div className="flex items-center gap-3">
+        <div className="flex flex-wrap items-center gap-2">
+          {/* Style Selector */}
+          <div className="flex items-center rounded-xl bg-slate-900 border border-slate-800 p-0.5 text-xs">
+            {(["dark", "satellite", "streets"] as MapTheme[]).map((theme) => (
+              <button
+                key={theme}
+                onClick={() => handleThemeChange(theme)}
+                className={`px-2.5 py-1 rounded-lg font-medium transition-all text-[11px] capitalize cursor-pointer ${
+                  mapTheme === theme
+                    ? "bg-cyan-500/20 text-cyan-300 border border-cyan-500/40"
+                    : "text-slate-400 hover:text-slate-200"
+                }`}
+              >
+                {theme}
+              </button>
+            ))}
+          </div>
+
+          {/* Recenter Button */}
+          {lat !== null && lng !== null && (
+            <button
+              onClick={handleRecenter}
+              title="Snap camera to container"
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-slate-900 hover:bg-slate-800 border border-slate-800 hover:border-cyan-500/50 text-slate-300 hover:text-cyan-300 text-xs font-medium transition-all cursor-pointer"
+            >
+              <Crosshair className="h-3.5 w-3.5 text-cyan-400" />
+              <span>Center</span>
+            </button>
+          )}
+
           {/* Speed badge */}
           {isConnected && lat !== null && (
-            <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-slate-800 border border-slate-700 text-xs mono">
+            <div className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl bg-slate-900 border border-slate-800 text-xs mono">
               <Navigation className="h-3.5 w-3.5 text-emerald-400" />
               <span className="text-slate-300">
                 {speed > 0.5 ? (
-                  <><span className="text-emerald-300 font-bold">{speed.toFixed(1)}</span> km/h</>
+                  <>
+                    <span className="text-emerald-300 font-bold">
+                      {speed.toFixed(1)}
+                    </span>{" "}
+                    km/h
+                  </>
                 ) : (
                   <span className="text-amber-300 font-semibold">Stationary</span>
                 )}
@@ -225,49 +434,67 @@ export default function LiveMap({ readings, isConnected }: LiveMapProps) {
             </div>
           )}
 
-          {/* Coordinate display */}
-          {lat !== null && lng !== null && (
-            <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-slate-800 border border-slate-700 text-[11px] mono text-slate-400">
-              <Satellite className="h-3 w-3 text-violet-400" />
-              <span>{lat.toFixed(5)}, {lng.toFixed(5)}</span>
+          {/* Coordinate badge */}
+          {lat !== null && lng !== null ? (
+            <div className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl bg-slate-900 border border-slate-800 text-[11px] mono text-slate-300">
+              <Satellite className="h-3.5 w-3.5 text-violet-400" />
+              <span>
+                {lat.toFixed(5)}, {lng.toFixed(5)}
+              </span>
+            </div>
+          ) : (
+            <div className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl bg-slate-900 border border-slate-800 text-[11px] mono text-amber-400">
+              <Compass className="h-3.5 w-3.5 animate-spin" />
+              <span>Acquiring GPS...</span>
             </div>
           )}
-
-          {/* Connection dot */}
-          <div className={`h-2 w-2 rounded-full ${isConnected ? "bg-emerald-400 animate-pulse" : "bg-slate-600"}`} />
         </div>
       </div>
 
-      {/* Map container */}
-      <div className="relative" style={{ height: "420px" }}>
-        {/* Error state */}
-        {mapError && (
-          <div className="absolute inset-0 flex flex-col items-center justify-center gap-3 bg-slate-900/90 z-10 p-6 text-center">
-            <MapPin className="h-10 w-10 text-slate-600" />
-            <p className="text-sm font-semibold text-slate-300">Map Unavailable</p>
-            <p className="text-xs text-slate-500 max-w-xs">{mapError}</p>
+      {/* 2. Map Canvas Container */}
+      <div className="relative w-full" style={{ height: "460px" }}>
+        {/* Waiting placeholder overlay if no GPS coordinates yet */}
+        {lat === null && (
+          <div className="absolute inset-0 flex flex-col items-center justify-center gap-3 bg-slate-950/70 z-10 backdrop-blur-xs">
+            <div className="h-10 w-10 rounded-full border-2 border-slate-700 border-t-cyan-400 animate-spin" />
+            <p className="text-sm font-semibold text-slate-300">
+              Waiting for live GPS fix from ESP32...
+            </p>
+            <p className="text-xs text-slate-500">
+              Neo-6M GPS satellite lock acquiring outdoors
+            </p>
           </div>
         )}
 
-        {/* No data yet */}
-        {!mapError && lat === null && (
-          <div className="absolute inset-0 flex flex-col items-center justify-center gap-3 bg-slate-900/60 z-10">
-            <div className="h-12 w-12 rounded-full border-2 border-slate-700 border-t-cyan-400 animate-spin" />
-            <p className="text-sm text-slate-400">Waiting for GPS coordinates...</p>
+        {/* Floating Quick Route Card */}
+        {destinationMeta && destinationMeta.destination !== "—" && (
+          <div className="absolute top-3 left-3 z-10 glass px-3.5 py-2.5 rounded-xl border border-slate-700/80 bg-slate-950/80 text-xs flex items-center gap-3 shadow-xl backdrop-blur-md">
+            <div className="flex items-center gap-1.5 text-cyan-300 font-semibold">
+              <span className="h-2 w-2 rounded-full bg-cyan-400 animate-pulse"></span>
+              {destinationMeta.origin}
+            </div>
+            <span className="text-slate-500">➔</span>
+            <div className="flex items-center gap-1.5 text-emerald-300 font-semibold">
+              <CheckCircle2 className="h-3.5 w-3.5 text-emerald-400" />
+              {destinationMeta.destination}
+            </div>
           </div>
         )}
 
-        {/* The actual map div — Ola Maps renders into this */}
+        {/* The Map Canvas */}
         <div ref={mapContainerRef} className="w-full h-full" />
       </div>
 
-      {/* Footer info bar */}
-      <div className="px-5 py-3 border-t border-slate-800/80 flex items-center justify-between text-[11px] text-slate-500">
-        <span>Krutrim Maps · Real-time GPS tracking · 1s update</span>
-        <span className="mono">
+      {/* 3. Footer Status Bar */}
+      <div className="px-5 py-3 border-t border-slate-800/80 bg-slate-950/60 flex items-center justify-between text-[11px] text-slate-400">
+        <span className="flex items-center gap-2">
+          <span className="h-2 w-2 rounded-full bg-emerald-400 animate-pulse" />
+          Agesichain Geospatial Engine · Active 1s GPS Ingestion
+        </span>
+        <span className="mono text-slate-400">
           {readings.length > 0
-            ? `Trail: last ${Math.min(trailReadings.length, 60)} points`
-            : "No trail data"}
+            ? `Active Trail: ${Math.min(trailReadings.length, 60)} coordinate points`
+            : "No trail recorded yet"}
         </span>
       </div>
     </div>

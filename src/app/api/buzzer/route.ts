@@ -16,7 +16,13 @@
  */
 
 import { NextRequest, NextResponse } from "next/server";
-import { silenceBuzzer, rearmBuzzer, getStore } from "@/lib/store";
+import {
+  silenceBuzzer,
+  rearmBuzzer,
+  testBuzzer,
+  clearManualOverride,
+  getStore,
+} from "@/lib/store";
 
 export async function POST(request: NextRequest): Promise<NextResponse> {
   let body: { action?: unknown };
@@ -33,9 +39,16 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
     silenceBuzzer();
   } else if (body.action === "rearm") {
     rearmBuzzer();
+  } else if (body.action === "test") {
+    testBuzzer();
+  } else if (body.action === "stop_test") {
+    clearManualOverride();
   } else {
     return NextResponse.json(
-      { success: false, error: 'action must be "silence" or "rearm".' },
+      {
+        success: false,
+        error: 'action must be "silence", "rearm", "test", or "stop_test".',
+      },
       { status: 422 }
     );
   }
