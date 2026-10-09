@@ -1,0 +1,17 @@
+version: "3.8"
+
+services:
+  agesichain-dashboard:
+    container_name: agesichain-dashboard
+    build:
+      context: .
+      dockerfile: Dockerfile
+    restart: always
+    ports:
+      - "8087:3000"
+    environment:
+      - PORT=3000
+      - HOSTNAME=0.0.0.0
+      - NODE_ENV=production
+      # Add your Krutrim / Ola Maps API Key:
+      - NEXT_PUBLIC_OLA_MAPS_API_KEY=${NEXT_PUBLIC_OLA_MAPS_API_KEY:-YOUR_KRUTRIM_API_KEY}
