@@ -297,7 +297,11 @@ export default function DestinationConfigCard({
                   <Clock className="h-3 w-3 text-amber-400" /> Live Road ETA
                 </span>
                 <p className="mt-1 text-xs font-mono font-bold text-amber-300 flex items-center gap-1.5">
-                  <span>{etaHours.toFixed(1)} hrs</span>
+                  <span>
+                    {etaHours < 1
+                      ? `${Math.round(etaHours * 60)} mins (${etaHours.toFixed(2)}h)`
+                      : `${etaHours.toFixed(1)} hrs`}
+                  </span>
                   {meta.routeDistanceKm && (
                     <span className="text-[10px] text-slate-400 font-normal">
                       ({meta.routeDistanceKm} km)
@@ -498,7 +502,9 @@ export default function DestinationConfigCard({
                       Applied ETA
                     </span>
                     <p className="mono text-sm font-bold text-cyan-300">
-                      {eta.toFixed(1)} hrs
+                      {eta < 1
+                        ? `${Math.round(eta * 60)} mins (${eta.toFixed(2)}h)`
+                        : `${eta.toFixed(1)} hrs`}
                     </p>
                   </div>
                 </div>
@@ -530,15 +536,19 @@ export default function DestinationConfigCard({
               <div>
                 <label className="text-[11px] font-bold text-slate-400 uppercase flex items-center justify-between">
                   <span>Transit ETA (Hours)</span>
-                  <span className="mono text-cyan-400 font-bold">{eta.toFixed(1)} hrs</span>
+                  <span className="mono text-cyan-400 font-bold">
+                    {eta < 1
+                      ? `${Math.round(eta * 60)} mins (${eta.toFixed(2)}h)`
+                      : `${eta.toFixed(1)} hrs`}
+                  </span>
                 </label>
                 <input
                   type="number"
-                  step="0.1"
-                  min="0.1"
-                  max="72"
+                  step="any"
+                  min="0.01"
+                  max="168"
                   value={eta}
-                  onChange={(e) => setEta(parseFloat(e.target.value) || 1)}
+                  onChange={(e) => setEta(parseFloat(e.target.value) || 0.1)}
                   className="mt-1 w-full px-3 py-2 rounded-xl bg-slate-950 border border-slate-800 text-xs text-slate-100 font-mono focus:outline-none focus:border-cyan-500"
                   required
                 />
@@ -581,7 +591,7 @@ export default function DestinationConfigCard({
                 </label>
                 <input
                   type="number"
-                  step="0.0001"
+                  step="any"
                   value={destLat}
                   onChange={(e) => {
                     const val = parseFloat(e.target.value) || 0;
@@ -598,7 +608,7 @@ export default function DestinationConfigCard({
                 </label>
                 <input
                   type="number"
-                  step="0.0001"
+                  step="any"
                   value={destLng}
                   onChange={(e) => {
                     const val = parseFloat(e.target.value) || 0;
