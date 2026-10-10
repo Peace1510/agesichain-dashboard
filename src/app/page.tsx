@@ -426,6 +426,8 @@ export default function ColdChainDashboardPage() {
           timeToSpoil={timeToSpoil}
           onUpdateRoute={handleUpdateRoute}
           loading={routeUpdating}
+          currentLat={latestReading?.latitude}
+          currentLng={latestReading?.longitude}
         />
         <BuzzerControlCard
           buzzerActive={buzzerActive}

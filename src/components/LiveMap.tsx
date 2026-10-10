@@ -114,6 +114,8 @@ export default function LiveMap({
   const destMarkerRef = useRef<any>(null);
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const pathSourceRef = useRef<any>(null);
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const plannedRouteSourceRef = useRef<any>(null);
   const [mapLoaded, setMapLoaded] = useState(false);
   const [mapTheme, setMapTheme] = useState<MapTheme>("dark");
   const prevCoordsRef = useRef<{ lat: number; lng: number } | null>(null);
@@ -216,6 +218,51 @@ export default function LiveMap({
           });
 
           pathSourceRef.current = map.getSource("trail");
+
+          // Planned Highway Route GeoJSON line source
+          map.addSource("planned-route", {
+            type: "geojson",
+            data: {
+              type: "FeatureCollection",
+              features: [],
+            },
+          });
+
+          // Planned route glow line
+          map.addLayer({
+            id: "planned-route-glow",
+            type: "line",
+            source: "planned-route",
+            layout: {
+              "line-join": "round",
+              "line-cap": "round",
+            },
+            paint: {
+              "line-color": "#10b981",
+              "line-width": 8,
+              "line-opacity": 0.3,
+              "line-blur": 3,
+            },
+          });
+
+          // Planned route highway dash
+          map.addLayer({
+            id: "planned-route-line",
+            type: "line",
+            source: "planned-route",
+            layout: {
+              "line-join": "round",
+              "line-cap": "round",
+            },
+            paint: {
+              "line-color": "#34d399",
+              "line-width": 3,
+              "line-opacity": 0.85,
+              "line-dasharray": [2, 2],
+            },
+          });
+
+          plannedRouteSourceRef.current = map.getSource("planned-route");
           setMapLoaded(true);
         });
 
@@ -233,6 +280,7 @@ export default function LiveMap({
         markerRef.current = null;
         destMarkerRef.current = null;
         pathSourceRef.current = null;
+        plannedRouteSourceRef.current = null;
       }
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -267,100 +315,165 @@ export default function LiveMap({
         });
         pathSourceRef.current = mapRef.current.getSource("trail");
       }
+
+      if (!mapRef.current.getSource("planned-route")) {
+        mapRef.current.addSource("planned-route", {
+          type: "geojson",
+          data: {
+            type: "FeatureCollection",
+            features: [],
+          },
+        });
+        mapRef.current.addLayer({
+          id: "planned-route-glow",
+          type: "line",
+          source: "planned-route",
+          layout: { "line-join": "round", "line-cap": "round" },
+          paint: {
+            "line-color": "#10b981",
+            "line-width": 8,
+            "line-opacity": 0.3,
+            "line-blur": 3,
+          },
+        });
+        mapRef.current.addLayer({
+          id: "planned-route-line",
+          type: "line",
+          source: "planned-route",
+          layout: { "line-join": "round", "line-cap": "round" },
+          paint: {
+            "line-color": "#34d399",
+            "line-width": 3,
+            "line-opacity": 0.85,
+            "line-dasharray": [2, 2],
+          },
+        });
+        plannedRouteSourceRef.current = mapRef.current.getSource("planned-route");
+      }
     });
   };
 
   // ── Update Container Marker & Trail on Telemetry Coordinate Changes ─────
   useEffect(() => {
     if (!mapLoaded || !mapRef.current) return;
-    if (lat === null || lng === null) return;
-
-    const prev = prevCoordsRef.current;
-    const hasMoved = !prev || prev.lat !== lat || prev.lng !== lng;
 
     (async () => {
       const { Marker, Popup } = await import("maplibre-gl");
 
       // 1. Live Container Marker (Custom Glowing Radar Pulse)
-      if (!markerRef.current) {
-        const el = document.createElement("div");
-        el.className = "agesichain-container-marker cursor-pointer";
-        el.innerHTML = `
-          <div class="relative flex items-center justify-center w-10 h-10 -ml-5 -mt-5">
-            <span class="absolute w-8 h-8 rounded-full bg-cyan-400/40 animate-ping"></span>
-            <span class="absolute w-6 h-6 rounded-full bg-cyan-500/30 border border-cyan-400"></span>
-            <span class="relative w-3.5 h-3.5 rounded-full bg-cyan-400 border-2 border-white shadow-[0_0_12px_#22d3ee]"></span>
-          </div>
-        `;
+      if (lat !== null && lng !== null) {
+        const prev = prevCoordsRef.current;
+        const hasMoved = !prev || prev.lat !== lat || prev.lng !== lng;
 
-        const popup = new Popup({ offset: 15, closeButton: false }).setHTML(`
-          <div style="font-family: monospace; font-size: 11px; padding: 4px; color: #e2e8f0; background: #0f172a; border-radius: 6px;">
-            <div style="font-weight: bold; color: #22d3ee; margin-bottom: 2px;">📦 VACCINE SHIPMENT</div>
-            <div>Coords: ${lat.toFixed(5)}, ${lng.toFixed(5)}</div>
-            <div>Temp: <b style="color: ${temp && (temp > 8 || temp < 2) ? "#f87171" : "#34d399"}">${temp !== null ? temp.toFixed(1) + "°C" : "—"}</b></div>
-            <div>Speed: ${speed.toFixed(1)} km/h</div>
-          </div>
-        `);
+        if (!markerRef.current) {
+          const el = document.createElement("div");
+          el.className = "agesichain-container-marker cursor-pointer";
+          el.innerHTML = `
+            <div class="relative flex items-center justify-center w-10 h-10 -ml-5 -mt-5">
+              <span class="absolute w-8 h-8 rounded-full bg-cyan-400/40 animate-ping"></span>
+              <span class="absolute w-6 h-6 rounded-full bg-cyan-500/30 border border-cyan-400"></span>
+              <span class="relative w-3.5 h-3.5 rounded-full bg-cyan-400 border-2 border-white shadow-[0_0_12px_#22d3ee]"></span>
+            </div>
+          `;
 
-        const marker = new Marker({ element: el })
-          .setLngLat([lng, lat])
-          .setPopup(popup)
-          .addTo(mapRef.current);
+          const popup = new Popup({ offset: 15, closeButton: false }).setHTML(`
+            <div style="font-family: monospace; font-size: 11px; padding: 4px; color: #e2e8f0; background: #0f172a; border-radius: 6px;">
+              <div style="font-weight: bold; color: #22d3ee; margin-bottom: 2px;">📦 VACCINE SHIPMENT</div>
+              <div>Coords: ${lat.toFixed(5)}, ${lng.toFixed(5)}</div>
+              <div>Temp: <b style="color: ${temp && (temp > 8 || temp < 2) ? "#f87171" : "#34d399"}">${temp !== null ? temp.toFixed(1) + "°C" : "—"}</b></div>
+              <div>Speed: ${speed.toFixed(1)} km/h</div>
+            </div>
+          `);
 
-        markerRef.current = marker;
-      } else {
-        markerRef.current.setLngLat([lng, lat]);
+          const marker = new Marker({ element: el })
+            .setLngLat([lng, lat])
+            .setPopup(popup)
+            .addTo(mapRef.current);
+
+          markerRef.current = marker;
+        } else {
+          markerRef.current.setLngLat([lng, lat]);
+        }
+
+        // Pan camera smoothly on significant position update
+        if (hasMoved) {
+          mapRef.current.easeTo({
+            center: [lng, lat],
+            duration: 600,
+          });
+        }
+
+        // Update Trail Path
+        if (pathSourceRef.current && trailReadings.length >= 2) {
+          const coords = trailReadings
+            .filter((r) => r.latitude !== 0 || r.longitude !== 0)
+            .map((r) => [r.longitude, r.latitude]);
+
+          pathSourceRef.current.setData({
+            type: "FeatureCollection",
+            features: [
+              {
+                type: "Feature",
+                geometry: { type: "LineString", coordinates: coords },
+                properties: {},
+              },
+            ],
+          });
+        }
+
+        prevCoordsRef.current = { lat, lng };
       }
 
       // 2. Destination Marker (if coordinates are provided in metadata)
       const dLat = destinationMeta?.destinationLat;
       const dLng = destinationMeta?.destinationLng;
       if (dLat && dLng) {
+        const distBadge = destinationMeta?.routeDistanceKm
+          ? ` · ${destinationMeta.routeDistanceKm} km`
+          : "";
+        const badgeContent = `
+          <div class="relative flex items-center justify-center -ml-3 -mt-6">
+            <div class="px-2.5 py-1 bg-emerald-500 text-slate-950 font-black text-[10px] rounded-lg shadow-xl border border-white flex items-center gap-1 whitespace-nowrap">
+              <span>🏁</span>
+              <span>${destinationMeta.destination}${distBadge}</span>
+            </div>
+          </div>
+        `;
+
         if (!destMarkerRef.current) {
           const destEl = document.createElement("div");
-          destEl.innerHTML = `
-            <div class="relative flex items-center justify-center -ml-3 -mt-6">
-              <div class="px-2 py-1 bg-emerald-500 text-slate-950 font-black text-[10px] rounded shadow-lg border border-white flex items-center gap-1">
-                🏁 ${destinationMeta.destination}
-              </div>
-            </div>
-          `;
+          destEl.innerHTML = badgeContent;
           const dMarker = new Marker({ element: destEl })
             .setLngLat([dLng, dLat])
             .addTo(mapRef.current);
           destMarkerRef.current = dMarker;
         } else {
           destMarkerRef.current.setLngLat([dLng, dLat]);
+          const destEl = destMarkerRef.current.getElement();
+          if (destEl) destEl.innerHTML = badgeContent;
         }
       }
 
-      // 3. Pan camera smoothly on significant position update
-      if (hasMoved) {
-        mapRef.current.easeTo({
-          center: [lng, lat],
-          duration: 600,
-        });
+      // 3. Update Planned Driving Highway Route
+      if (plannedRouteSourceRef.current) {
+        if (destinationMeta?.routeGeometry) {
+          plannedRouteSourceRef.current.setData({
+            type: "FeatureCollection",
+            features: [
+              {
+                type: "Feature",
+                geometry: destinationMeta.routeGeometry,
+                properties: {},
+              },
+            ],
+          });
+        } else {
+          plannedRouteSourceRef.current.setData({
+            type: "FeatureCollection",
+            features: [],
+          });
+        }
       }
-
-      // 4. Update Trail Path
-      if (pathSourceRef.current && trailReadings.length >= 2) {
-        const coords = trailReadings
-          .filter((r) => r.latitude !== 0 || r.longitude !== 0)
-          .map((r) => [r.longitude, r.latitude]);
-
-        pathSourceRef.current.setData({
-          type: "FeatureCollection",
-          features: [
-            {
-              type: "Feature",
-              geometry: { type: "LineString", coordinates: coords },
-              properties: {},
-            },
-          ],
-        });
-      }
-
-      prevCoordsRef.current = { lat, lng };
     })();
   }, [lat, lng, speed, temp, mapLoaded, trailReadings, destinationMeta]);
 

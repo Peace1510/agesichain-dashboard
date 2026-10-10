@@ -50,6 +50,9 @@ export interface ShipmentMeta {
   destination: string;
   destinationLat?: number;
   destinationLng?: number;
+  routeDistanceKm?: number;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  routeGeometry?: any;
 }
 
 /** Full shape of the singleton store. */
