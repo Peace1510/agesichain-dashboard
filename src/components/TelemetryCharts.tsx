@@ -57,7 +57,7 @@ export default function TelemetryCharts({ readings, className }: TelemetryCharts
           viability_prev: Math.max(0, Math.min(1, currentV)),
           timestamp_prev_unix_s: sorted[i - 1].timestamp,
           timestamp_current_unix_s: r.timestamp,
-          temperature_celsius: r.temperature,
+          temperature_celsius: sorted[i - 1].temperature,
         });
         currentV = step.viability_new;
       }

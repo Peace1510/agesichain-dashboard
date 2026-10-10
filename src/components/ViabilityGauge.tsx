@@ -46,10 +46,19 @@ export default function ViabilityGauge({
   status,
   className,
 }: ViabilityGaugeProps) {
-  const cfg = STATUS_COLORS[status];
-
   /** Clamp viability to [0, 1] for display. */
   const clamped = Math.max(0, Math.min(1, viability));
+
+  /**
+   * The visual color of the viability gauge strictly reflects actual biological potency:
+   *  >= 90%: NOMINAL (emerald green)
+   *  80% - 90%: WARNING (amber - approaching critical threshold)
+   *  < 80%: CRITICAL (red - potency breach)
+   */
+  const viabilityTier: ShipmentStatus =
+    clamped < 0.80 ? "CRITICAL" : clamped < 0.90 ? "WARNING" : "NOMINAL";
+
+  const cfg = STATUS_COLORS[viabilityTier];
 
   /** How much of the arc is "filled". */
   const filledLen = useMemo(() => clamped * ARC_LEN, [clamped]);

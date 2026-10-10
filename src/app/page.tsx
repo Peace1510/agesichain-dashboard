@@ -194,7 +194,7 @@ export default function ColdChainDashboardPage() {
               ⚠ BUZZER ACTIVE — TEMPERATURE EXCURSION / SPOILAGE HAZARD
             </h3>
             <p className="mt-1 text-xs text-orange-300/90 leading-relaxed">
-              The physical ESP32 buzzer on GPIO 32 is actively buzzing! Chamber temperature is {currentTemp !== null ? currentTemp.toFixed(1) + "°C" : "—"} (outside safe WHO 2°C – 8°C cold chain envelope). Click &quot;Silence Buzzer&quot; to silence it remotely from the website.
+              The physical ESP32 buzzer on GPIO 32 is actively buzzing! Chamber temperature is {currentTemp !== null ? currentTemp.toFixed(1) + "°C" : "—"} (outside safe WHO 2.0°C – 8.0°C cold envelope). Current viability: {(currentViability * 100).toFixed(2)}% | TTS: {timeToSpoil !== null ? timeToSpoil.toFixed(1) + "h" : "—"}. Click &quot;Silence Buzzer&quot; to silence it remotely.
             </p>
           </div>
           <button
@@ -216,10 +216,32 @@ export default function ColdChainDashboardPage() {
           </div>
           <div>
             <h3 className="text-sm font-bold text-red-200 uppercase tracking-wider">
-              CRITICAL VIABILITY HAZARD — IMMEDIATE COLD CHAIN BREACH
+              {currentViability <= 0.8
+                ? "CRITICAL POTENCY BREACH — VACCINE SPOILED"
+                : timeToSpoil !== null && timeToSpoil <= etaHours
+                ? "CRITICAL TRANSIT DEFICIT — SPOILAGE BEFORE DELIVERY"
+                : currentTemp !== null && currentTemp <= 0.0
+                ? `CRITICAL FREEZE EXCURSION (${currentTemp.toFixed(1)}°C) — PROTEIN DENATURATION HAZARD`
+                : "CRITICAL COLD CHAIN ALERT"}
             </h3>
             <p className="mt-1 text-xs text-red-300/90 leading-relaxed">
-              Vaccine viability has dropped below the critical <span className="font-semibold underline">80.00%</span> potency threshold or projected delivery viability indicates permanent irreversible decay. Quarantine batch immediately.
+              {currentViability <= 0.8 ? (
+                <>
+                  Vaccine viability has dropped to <span className="font-semibold underline">{(currentViability * 100).toFixed(2)}%</span> (below the critical 80.00% threshold). Molecular potency is irreversibly lost. Quarantine batch immediately and do not administer.
+                </>
+              ) : timeToSpoil !== null && timeToSpoil <= etaHours ? (
+                <>
+                  Vaccine viability is currently <span className="font-semibold">{(currentViability * 100).toFixed(2)}%</span> (within safe potency limits), BUT the remaining safe window ({timeToSpoil.toFixed(1)}h) is shorter than remaining transit ETA ({etaHours.toFixed(1)}h). Product is projected to drop below 80% before arrival (projected {projViability !== null ? projViability.toFixed(2) + "%" : "—"} @ destination). Expedite transit or re-ice immediately to prevent batch failure.
+                </>
+              ) : currentTemp !== null && currentTemp <= 0.0 ? (
+                <>
+                  Chamber temperature is at or below freezing (<span className="font-semibold">{currentTemp.toFixed(1)}°C</span>). Liquid vaccines are vulnerable to freeze-denaturation. Immediate inspection required.
+                </>
+              ) : (
+                <>
+                  Shipment is under critical kinetic strain. Current viability is {(currentViability * 100).toFixed(2)}%. Immediate inspection required.
+                </>
+              )}
             </p>
           </div>
         </div>
@@ -232,10 +254,20 @@ export default function ColdChainDashboardPage() {
           </div>
           <div>
             <h3 className="text-sm font-bold text-amber-200 uppercase tracking-wider">
-              THERMAL EXCURSION WARNING
+              {currentTemp !== null && (currentTemp > 8.0 || currentTemp < 2.0)
+                ? `THERMAL EXCURSION WARNING (${currentTemp.toFixed(1)}°C)`
+                : "VIABILITY BUFFER WARNING"}
             </h3>
             <p className="mt-1 text-xs text-amber-300/90 leading-relaxed">
-              Ambient temperature is outside the recommended WHO 2.0°C – 8.0°C cold envelope, or remaining safe transit time is approaching the destination ETA. Inspect cooling unit.
+              {currentTemp !== null && (currentTemp > 8.0 || currentTemp < 2.0) ? (
+                <>
+                  Ambient temperature is at <span className="font-semibold">{currentTemp.toFixed(1)}°C</span> (WHO standard is 2.0°C – 8.0°C). Current viability is {(currentViability * 100).toFixed(2)}%. Viability buffer is narrowing. Inspect cooling unit.
+                </>
+              ) : (
+                <>
+                  Remaining safe transit buffer is approaching the destination ETA ({etaHours.toFixed(1)}h). Current viability: {(currentViability * 100).toFixed(2)}%. Monitor shipment progress closely.
+                </>
+              )}
             </p>
           </div>
         </div>

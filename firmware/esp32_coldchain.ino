@@ -243,7 +243,7 @@ void parseServerResponse(const String& payload) {
     int start = ttsIdx + 22;
     while (start < payload.length() && (payload[start] == ' ' || payload[start] == ':')) start++;
     int end = start;
-    while (end < payload.length() && (isdigit(payload[end]) || payload[end] == '.')) end++;
+    while (end < payload.length() && (isdigit(payload[end]) || payload[end] == '.' || payload[end] == 'e' || payload[end] == 'E' || payload[end] == '-' || payload[end] == '+')) end++;
     lastTimeToSpoil = payload.substring(start, end).toFloat();
   }
 

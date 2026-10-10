@@ -478,24 +478,33 @@ export function evaluateViability(
   const viability_buffer_hours =
     time_to_spoil_hours - destination_eta_hours; // [hr]
 
-  // Step 3 – assign traffic-light status:
-  // Evaluates BOTH kinetic viability buffer AND WHO cold chain envelope (2.0°C – 8.0°C):
-  //  - Severe thermal excursion (>= 25.0°C or <= 0.0°C freeze risk) OR viability breach -> CRITICAL
-  //  - Moderate thermal excursion (> 8.0°C or < 2.0°C) OR low buffer (<= 1.0h) -> WARNING
-  //  - Within safe 2.0°C – 8.0°C envelope AND safe buffer -> NOMINAL
-  const isExtremeThermalExcursion = temperature_celsius >= 25.0 || temperature_celsius <= 0.0;
+  // Step 3 – assign shipment status based on actual biophysical viability and transit buffer:
+  //
+  // CRITICAL condition (Actual breach or guaranteed transit loss):
+  //  1. Current viability has dropped to or below the critical threshold (viability_current <= v_threshold, e.g. <= 0.80)
+  //  2. Time-to-spoil is shorter than transit ETA (viability_buffer_hours < 0, meaning it will spoil before arrival)
+  //  3. Extreme freezing excursion (temperature_celsius <= 0.0°C), which causes ice crystallization and adjuvant denaturation
+  //
+  // WARNING condition (Thermal excursion or narrow buffer, but product is STILL VIABLE):
+  //  1. Thermal excursion (temperature > 8.0°C or < 2.0°C) with safe remaining buffer
+  //  2. Approaching threshold (0.80 < viability_current < 0.90)
+  //  3. Narrow buffer (0 <= viability_buffer_hours <= thresholds.warning_hours)
+  //
+  // NOMINAL condition:
+  //  Within WHO 2.0°C – 8.0°C envelope, viability >= 90%, and healthy viability buffer > 1.0h.
+
+  const isFreezing = temperature_celsius <= 0.0;
   const isThermalExcursion = temperature_celsius > 8.0 || temperature_celsius < 2.0;
+  const isActualPotencyBreached = viability_current <= v_threshold;
+  const isSpoilBeforeArrival = time_to_spoil_hours <= destination_eta_hours;
 
   let status: ShipmentStatus;
-  if (
-    viability_buffer_hours <= thresholds.critical_hours ||
-    viability_current <= v_threshold ||
-    isExtremeThermalExcursion
-  ) {
+  if (isActualPotencyBreached || isSpoilBeforeArrival || isFreezing) {
     status = "CRITICAL";
   } else if (
-    viability_buffer_hours <= thresholds.warning_hours ||
-    isThermalExcursion
+    isThermalExcursion ||
+    viability_current < 0.90 ||
+    viability_buffer_hours <= thresholds.warning_hours
   ) {
     status = "WARNING";
   } else {

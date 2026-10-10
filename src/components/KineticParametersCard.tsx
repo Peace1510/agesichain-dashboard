@@ -122,7 +122,7 @@ export default function KineticParametersCard({
             </span>
           </div>
           <p className="mt-1 text-[11px] text-slate-500">
-            Time remaining until 80% loss
+            Time remaining until 80% potency threshold
           </p>
         </div>
 
