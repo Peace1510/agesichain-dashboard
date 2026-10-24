@@ -17,6 +17,8 @@ export const metadata: Metadata = {
   description: "Real-time vaccine viability dashboard powered by Arrhenius kinetics & IoT telemetry",
 };
 
+import { Providers } from "@/components/Providers";
+
 export default function RootLayout({
   children,
 }: Readonly<{
@@ -32,7 +34,7 @@ export default function RootLayout({
         />
       </head>
       <body className="min-h-full flex flex-col bg-[#04070f] text-slate-100 selection:bg-cyan-500/30 selection:text-cyan-200">
-        {children}
+        <Providers>{children}</Providers>
       </body>
     </html>
   );

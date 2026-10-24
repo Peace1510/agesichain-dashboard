@@ -2,6 +2,7 @@
 
 import { cn, fmtTimestamp } from "@/lib/utils";
 import StatusBadge from "@/components/StatusBadge";
+import UserNav from "@/components/UserNav";
 import type { ShipmentStatus } from "@/lib/kinetics";
 import type { ShipmentMeta } from "@/lib/store";
 import {
@@ -119,6 +120,9 @@ export default function ShipmentHeader({
           >
             <RefreshCw className="h-4 w-4" />
           </button>
+
+          {/* User profile & Sign Out */}
+          <UserNav />
         </div>
       </div>
     </header>
