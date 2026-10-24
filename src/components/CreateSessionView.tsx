@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import {
   ThermometerSnowflake,
   Shield,
@@ -16,7 +16,10 @@ import {
   Layers,
   Flame,
   Info,
+  Navigation,
+  RefreshCw,
 } from "lucide-react";
+import PlaceAutocompleteInput, { type PlaceResult } from "@/components/PlaceAutocompleteInput";
 import {
   VACCINE_TIERS,
   type VaccineTierType,
@@ -45,11 +48,51 @@ export default function CreateSessionView({
   const [minTemp, setMinTemp] = useState<number>(2.0);
   const [maxTemp, setMaxTemp] = useState<number>(8.0);
   const [origin, setOrigin] = useState("Central Vaccine Depot, Pune");
+  const [originCoords, setOriginCoords] = useState<{ lat: number; lng: number } | null>(null);
   const [destination, setDestination] = useState("District General Hospital, Mumbai");
+  const [destCoords, setDestCoords] = useState<{ lat: number; lng: number } | null>(null);
   const [etaHours, setEtaHours] = useState<number>(2.5);
+  const [etaDistKm, setEtaDistKm] = useState<number | null>(null);
+  const [etaLoading, setEtaLoading] = useState(false);
 
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  // Auto-calculate ETA when both coords are available
+  const calculateEta = useCallback(async (
+    oCoords: { lat: number; lng: number },
+    dCoords: { lat: number; lng: number }
+  ) => {
+    setEtaLoading(true);
+    try {
+      const res = await fetch(
+        `/api/maps/eta?originLat=${oCoords.lat}&originLng=${oCoords.lng}&destLat=${dCoords.lat}&destLng=${dCoords.lng}`
+      );
+      const data = await res.json();
+      if (data.durationHours != null) {
+        setEtaHours(data.durationHours);
+        setEtaDistKm(data.distanceKm ?? null);
+      }
+    } catch {
+      // keep manual value
+    } finally {
+      setEtaLoading(false);
+    }
+  }, []);
+
+  const handleOriginSelected = useCallback((place: PlaceResult) => {
+    setOrigin(place.description);
+    const coords = place.lat ? { lat: place.lat, lng: place.lng } : null;
+    setOriginCoords(coords);
+    if (coords && destCoords) calculateEta(coords, destCoords);
+  }, [destCoords, calculateEta]);
+
+  const handleDestSelected = useCallback((place: PlaceResult) => {
+    setDestination(place.description);
+    const coords = place.lat ? { lat: place.lat, lng: place.lng } : null;
+    setDestCoords(coords);
+    if (originCoords && coords) calculateEta(originCoords, coords);
+  }, [originCoords, calculateEta]);
 
   const handleSelectTier = (tier: VaccineTierType) => {
     setSelectedTier(tier);
@@ -304,50 +347,82 @@ export default function CreateSessionView({
               />
             </div>
 
-            {/* ETA in Hours */}
+            {/* ETA in Hours — auto-calculated */}
             <div className="space-y-1.5">
-              <label className="text-xs font-semibold text-slate-300">
-                Transit ETA (Hours) *
+              <label className="text-xs font-semibold text-slate-300 flex items-center justify-between">
+                <span className="flex items-center gap-1">
+                  <Clock className="h-3 w-3 text-cyan-400" />
+                  Transit ETA (Hours)
+                </span>
+                {(originCoords && destCoords) && (
+                  <button
+                    type="button"
+                    onClick={() => originCoords && destCoords && calculateEta(originCoords, destCoords)}
+                    className="text-[10px] text-cyan-400 hover:text-cyan-300 flex items-center gap-0.5 transition-colors"
+                  >
+                    <RefreshCw className="h-2.5 w-2.5" />
+                    Recalculate
+                  </button>
+                )}
               </label>
-              <input
-                type="number"
-                step="0.5"
-                min="0.5"
-                max="72"
-                required
-                value={etaHours}
-                onChange={(e) => setEtaHours(parseFloat(e.target.value) || 2.5)}
-                className="w-full px-3.5 py-2.5 bg-slate-900/80 border border-slate-700/80 rounded-xl text-sm text-slate-100 font-mono focus:outline-none focus:border-cyan-400"
-              />
+              <div className="relative">
+                <input
+                  type="number"
+                  step="0.1"
+                  min="0.5"
+                  max="120"
+                  required
+                  value={etaHours}
+                  onChange={(e) => setEtaHours(parseFloat(e.target.value) || 2.5)}
+                  className={`w-full px-3.5 py-2.5 pr-10 bg-slate-900/80 border rounded-xl text-sm text-slate-100 font-mono focus:outline-none transition-colors ${
+                    etaLoading
+                      ? "border-cyan-500/60 animate-pulse"
+                      : "border-slate-700/80 focus:border-cyan-400"
+                  }`}
+                />
+                {etaLoading ? (
+                  <Navigation className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-cyan-400 animate-spin" />
+                ) : (
+                  <Navigation className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-600" />
+                )}
+              </div>
+              {etaDistKm && (
+                <p className="text-[10px] text-emerald-400 font-mono">
+                  ≈ {etaDistKm} km road distance · auto-calculated via Ola Maps
+                </p>
+              )}
+              {!etaDistKm && (
+                <p className="text-[10px] text-slate-500">
+                  Select origin &amp; destination to auto-calculate.
+                </p>
+              )}
             </div>
 
             {/* Origin Location */}
             <div className="space-y-1.5 sm:col-span-2 lg:col-span-1">
-              <label className="text-xs font-semibold text-slate-300 flex items-center gap-1">
-                <MapPin className="h-3 w-3 text-cyan-400" /> Origin Facility
-              </label>
-              <input
-                type="text"
-                required
+              <PlaceAutocompleteInput
+                id="session-origin"
+                label="Origin Facility"
+                icon={<MapPin className="h-3 w-3 text-cyan-400" />}
                 value={origin}
-                onChange={(e) => setOrigin(e.target.value)}
-                placeholder="e.g. Cold Hub, Central Depot"
-                className="w-full px-3.5 py-2.5 bg-slate-900/80 border border-slate-700/80 rounded-xl text-sm text-slate-100 focus:outline-none focus:border-cyan-400"
+                placeholder="e.g. Central Vaccine Depot, Pune"
+                required
+                onPlaceSelected={handleOriginSelected}
+                onTextChange={setOrigin}
               />
             </div>
 
             {/* Destination Location */}
             <div className="space-y-1.5 sm:col-span-2 lg:col-span-2">
-              <label className="text-xs font-semibold text-slate-300 flex items-center gap-1">
-                <Truck className="h-3 w-3 text-emerald-400" /> Destination Hospital / Clinic
-              </label>
-              <input
-                type="text"
-                required
+              <PlaceAutocompleteInput
+                id="session-destination"
+                label="Destination Hospital / Clinic"
+                icon={<Truck className="h-3 w-3 text-emerald-400" />}
                 value={destination}
-                onChange={(e) => setDestination(e.target.value)}
                 placeholder="e.g. District General Hospital, Mumbai"
-                className="w-full px-3.5 py-2.5 bg-slate-900/80 border border-slate-700/80 rounded-xl text-sm text-slate-100 focus:outline-none focus:border-cyan-400"
+                required
+                onPlaceSelected={handleDestSelected}
+                onTextChange={setDestination}
               />
             </div>
           </div>
