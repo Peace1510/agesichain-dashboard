@@ -1,8 +1,11 @@
 import { NextRequest, NextResponse } from "next/server";
 
-const OLA_KEY = process.env.OLA_MAPS_API_KEY ?? process.env.NEXT_PUBLIC_OLA_MAPS_API_KEY ?? "";
-
 export async function GET(req: NextRequest) {
+  const OLA_KEY =
+    process.env.OLA_MAPS_API_KEY ??
+    process.env.NEXT_PUBLIC_OLA_MAPS_API_KEY ??
+    "";
+
   const placeId = req.nextUrl.searchParams.get("place_id");
   if (!placeId) {
     return NextResponse.json({ error: "Missing place_id" }, { status: 400 });

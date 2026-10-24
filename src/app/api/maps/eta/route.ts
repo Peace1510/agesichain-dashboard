@@ -1,8 +1,11 @@
 import { NextRequest, NextResponse } from "next/server";
 
-const OLA_KEY = process.env.OLA_MAPS_API_KEY ?? process.env.NEXT_PUBLIC_OLA_MAPS_API_KEY ?? "";
-
 export async function GET(req: NextRequest) {
+  const OLA_KEY =
+    process.env.OLA_MAPS_API_KEY ??
+    process.env.NEXT_PUBLIC_OLA_MAPS_API_KEY ??
+    "";
+
   const originLat = req.nextUrl.searchParams.get("originLat");
   const originLng = req.nextUrl.searchParams.get("originLng");
   const destLat = req.nextUrl.searchParams.get("destLat");
