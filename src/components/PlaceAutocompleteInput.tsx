@@ -71,6 +71,9 @@ export default function PlaceAutocompleteInput({
       .then((r) => r.json())
       .then((data) => {
         if (cancelled) return;
+        if (data._error) {
+          console.error("[PlaceAutocomplete] API error:", data._error, data._detail ?? "");
+        }
         const preds = data.predictions ?? [];
         setPredictions(preds);
         setOpen(preds.length > 0);
