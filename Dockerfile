@@ -4,12 +4,13 @@ WORKDIR /app
 
 # Install dependencies
 COPY package*.json ./
+COPY prisma ./prisma/
 RUN npm ci
 
 # Copy source and env files
 COPY . .
 
-# Generate Prisma Client
+# Generate Prisma Client (in case schema changed)
 RUN npx prisma generate
 
 # Build standalone Next.js production bundle
