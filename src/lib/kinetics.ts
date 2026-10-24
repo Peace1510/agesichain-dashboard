@@ -434,22 +434,17 @@ export interface ViabilityEvaluationInput {
   v_threshold?: number;
   /** Optional custom status thresholds */
   status_thresholds?: Partial<StatusThresholds>;
+  /** Optional minimum allowable temperature for the active vaccine tier (default: 2.0°C) */
+  min_temp_celsius?: number;
+  /** Optional maximum allowable temperature for the active vaccine tier (default: 8.0°C) */
+  max_temp_celsius?: number;
+  /** Optional freeze breach threshold (e.g. 0.0°C for refrigerated vaccines) */
+  freeze_limit_celsius?: number;
 }
 
 /**
  * Evaluate shipment viability against the remaining ETA and assign a
- * traffic-light status.
- *
- * Steps:
- *   1. Compute t_spoil at the current temperature.
- *   2. Viability Buffer = t_spoil - destination_eta_hours
- *   3. Map buffer to {@link ShipmentStatus}:
- *        Buffer <= 0.5 hr  → CRITICAL
- *        Buffer <= 1.0 hr  → WARNING
- *        Buffer  > 1.0 hr  → NOMINAL
- *
- * @param input  See {@link ViabilityEvaluationInput}
- * @returns      See {@link ViabilityEvaluation}
+ * traffic-light status based on Arrhenius degradation and active tier envelope.
  */
 export function evaluateViability(
   input: ViabilityEvaluationInput
@@ -460,6 +455,9 @@ export function evaluateViability(
     destination_eta_hours,
     v_threshold = V_THRESHOLD,
     status_thresholds = {},
+    min_temp_celsius = 2.0,
+    max_temp_celsius = 8.0,
+    freeze_limit_celsius = 0.0,
   } = input;
 
   const thresholds: StatusThresholds = {
@@ -478,28 +476,17 @@ export function evaluateViability(
   const viability_buffer_hours =
     time_to_spoil_hours - destination_eta_hours; // [hr]
 
-  // Step 3 – assign shipment status based on actual biophysical viability and transit buffer:
-  //
-  // CRITICAL condition (Actual breach or guaranteed transit loss):
-  //  1. Current viability has dropped to or below the critical threshold (viability_current <= v_threshold, e.g. <= 0.80)
-  //  2. Time-to-spoil is shorter than transit ETA (viability_buffer_hours < 0, meaning it will spoil before arrival)
-  //  3. Extreme freezing excursion (temperature_celsius <= 0.0°C), which causes ice crystallization and adjuvant denaturation
-  //
-  // WARNING condition (Thermal excursion or narrow buffer, but product is STILL VIABLE):
-  //  1. Thermal excursion (temperature > 8.0°C or < 2.0°C) with safe remaining buffer
-  //  2. Approaching threshold (0.80 < viability_current < 0.90)
-  //  3. Narrow buffer (0 <= viability_buffer_hours <= thresholds.warning_hours)
-  //
-  // NOMINAL condition:
-  //  Within WHO 2.0°C – 8.0°C envelope, viability >= 90%, and healthy viability buffer > 1.0h.
-
-  const isFreezing = temperature_celsius <= 0.0;
-  const isThermalExcursion = temperature_celsius > 8.0 || temperature_celsius < 2.0;
+  // Step 3 – assign status based on active tier envelope:
+  // For standard refrigerated (+2 to +8°C): freeze <= 0.0°C is irreversible destruction
+  const isFreezingBreach =
+    typeof freeze_limit_celsius === "number" && temperature_celsius <= freeze_limit_celsius;
+  const isThermalExcursion =
+    temperature_celsius > max_temp_celsius || temperature_celsius < min_temp_celsius;
   const isActualPotencyBreached = viability_current <= v_threshold;
   const isSpoilBeforeArrival = time_to_spoil_hours <= destination_eta_hours;
 
   let status: ShipmentStatus;
-  if (isActualPotencyBreached || isSpoilBeforeArrival || isFreezing) {
+  if (isActualPotencyBreached || isSpoilBeforeArrival || isFreezingBreach) {
     status = "CRITICAL";
   } else if (
     isThermalExcursion ||
@@ -512,9 +499,9 @@ export function evaluateViability(
   }
 
   return {
-    viability: viability_current,           // [0.0 – 1.0]
-    time_to_spoil_hours,                    // [hr]
-    viability_buffer_hours,                 // [hr]
+    viability: viability_current,
+    time_to_spoil_hours,
+    viability_buffer_hours,
     status,
   };
 }
@@ -525,56 +512,48 @@ export function evaluateViability(
 
 /** All-in-one output for a complete cold chain snapshot. */
 export interface ColdChainSnapshot {
-  /** Accumulated viability fraction at latest reading  [0.0 – 1.0] */
   cumulative_viability: number;
-  /** Time-to-spoil at the latest recorded temperature  [hr] */
   time_to_spoil_hours: number;
-  /** Mean Kinetic Temperature of the shipment  [°C] */
   mkt_celsius: number;
-  /** Shipment evaluation result */
   evaluation: ViabilityEvaluation;
 }
 
-/**
- * Convenience function that runs the full kinetics pipeline from raw sensor
- * readings to a complete {@link ColdChainSnapshot}.
- *
- * @param readings               Chronologically ordered sensor readings (>= 1)
- * @param destination_eta_hours  Remaining transit hours to destination  [hr]
- * @returns                      Complete kinetics snapshot
- */
+export interface ColdChainSnapshotOptions {
+  min_temp_celsius?: number;
+  max_temp_celsius?: number;
+  freeze_limit_celsius?: number;
+}
+
 export function computeColdChainSnapshot(
   readings: TemperatureReading[],
-  destination_eta_hours: number
+  destination_eta_hours: number,
+  options?: ColdChainSnapshotOptions
 ): ColdChainSnapshot {
-  // Cumulative viability across the full recorded journey
-  const cumulative_viability = computeCumulativeViability(readings); // [0.0 – 1.0]
-
-  // Latest reading drives the forward-looking projection
+  const cumulative_viability = computeCumulativeViability(readings);
   const latestReading = readings[readings.length - 1]!;
 
-  // Time-to-spoil at the current (latest) temperature
   const { time_to_spoil_hours } = computeTimeToSpoil({
     viability_current:   cumulative_viability,
     temperature_celsius: latestReading.temperature_celsius,
   });
 
-  // MKT uses every recorded temperature
   const { mkt_celsius } = computeMKT({
     temperatures_celsius: readings.map((r) => r.temperature_celsius),
   });
 
-  // Evaluate against ETA
   const evaluation = evaluateViability({
     viability_current:    cumulative_viability,
     temperature_celsius:  latestReading.temperature_celsius,
     destination_eta_hours,
+    min_temp_celsius:     options?.min_temp_celsius,
+    max_temp_celsius:     options?.max_temp_celsius,
+    freeze_limit_celsius: options?.freeze_limit_celsius,
   });
 
   return {
-    cumulative_viability,   // [0.0 – 1.0]
-    time_to_spoil_hours,    // [hr]
-    mkt_celsius,            // [°C]
+    cumulative_viability,
+    time_to_spoil_hours,
+    mkt_celsius,
     evaluation,
   };
 }

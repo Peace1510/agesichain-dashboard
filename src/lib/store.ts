@@ -1,15 +1,7 @@
 /**
  * @file lib/store.ts
- * @description Singleton in-memory state store for the Cold Chain Dashboard.
- *
- * In Next.js App Router (Node.js runtime), module-level variables persist for
- * the lifetime of the server process, giving us a lightweight in-process store
- * that survives across multiple requests without an external database.
- *
- * Architecture note:
- *   - This module is imported by API route handlers.
- *   - All mutations are synchronous to avoid race conditions on single-threaded Node.js.
- *   - For production use, replace with Redis / a time-series DB.
+ * @description Singleton in-memory state store for the Cold Chain Dashboard with
+ *              PostgreSQL session management and telemetry archival integration.
  */
 
 import {
@@ -19,6 +11,7 @@ import {
   V_BASELINE,
   V_THRESHOLD,
 } from "@/lib/kinetics";
+import { prisma } from "@/lib/prisma";
 
 // ─────────────────────────────────────────────────────────────────────────────
 // TYPES
@@ -55,62 +48,61 @@ export interface ShipmentMeta {
   routeGeometry?: any;
 }
 
+/** Active transit session data stored in runtime memory. */
+export interface ActiveSessionInfo {
+  id: string;
+  sessionCode: string;
+  vaccineName: string;
+  vaccineTier: "STANDARD_REFRIGERATED" | "FROZEN" | "ULTRA_COLD";
+  minTemp: number;
+  maxTemp: number;
+  targetTemp?: number | null;
+  transportEquip?: string | null;
+  batchNumber?: string | null;
+  origin: string;
+  destination: string;
+  destinationLat?: number | null;
+  destinationLng?: number | null;
+  etaHours: number;
+  startedAt: string;
+  totalReadings: number;
+  excursionCount: number;
+  minRecordedTemp?: number | null;
+  maxRecordedTemp?: number | null;
+  sumTemp?: number;
+}
+
 /** Full shape of the singleton store. */
 export interface StoreState {
-  /**
-   * Circular FIFO queue of the last MAX_READINGS raw telemetry points.
-   * Oldest entry is evicted when the queue exceeds MAX_READINGS.
-   */
   readings: TelemetryReading[];
-  /**
-   * Latest kinetic snapshot — recomputed on every `addReading` call.
-   * Null only before the first reading arrives.
-   */
   currentSnapshot: ColdChainSnapshot | null;
-  /** Remaining transit time to the delivery destination  [hr] */
   destinationEtaHours: number;
-  /** Static metadata about the active shipment */
   shipmentMeta: ShipmentMeta;
-  /**
-   * Buzzer state — when true, the server will tell the ESP32 to activate
-   * the physical buzzer on its next data exchange.
-   */
   buzzerActive: boolean;
-  /**
-   * Whether the buzzer was manually silenced by the dashboard operator.
-   * If true, the server will NOT re-activate it even if conditions warrant it,
-   * until conditions return to nominal or the operator re-arms it.
-   */
   buzzerSilenced: boolean;
-  /**
-   * Manual override test mode (null = normal auto logic, true = test on, false = test off).
-   */
   buzzerManualOverride?: boolean | null;
+  activeSession: ActiveSessionInfo | null;
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
 // CONSTANTS
 // ─────────────────────────────────────────────────────────────────────────────
 
-/** Maximum number of raw readings retained in memory. */
+/** Maximum number of raw readings retained in FIFO buffer. */
 const MAX_READINGS = 600; // ~10 minutes at 1 reading/second
 
-/** Default ETA when the store is first initialised  [hr] */
+/** Default ETA when the store is first initialised [hr] */
 const DEFAULT_ETA_HOURS = 2.5;
 
-/**
- * Time-to-spoil threshold that triggers the buzzer alert  [hr]
- * If the vaccine is projected to become unviable within this window,
- * the server will command the ESP32 to activate its buzzer.
- */
-export const BUZZER_ALERT_THRESHOLD_HOURS = 1.0; // 1 hour alert window
+/** Time-to-spoil threshold that triggers the buzzer alert [hr] */
+export const BUZZER_ALERT_THRESHOLD_HOURS = 1.0;
 
-/** Default shipment metadata — to be updated via the API when a shipment starts. */
+/** Default shipment metadata */
 const DEFAULT_META: ShipmentMeta = {
-  id: "COV-902",
-  name: "Active Vaccine Transit",
-  origin: "Cold Hub, Pune",
-  destination: "District Hospital, Mumbai",
+  id: "—",
+  name: "No Active Session",
+  origin: "—",
+  destination: "—",
   destinationLat: 18.9822,
   destinationLng: 72.8335,
 };
@@ -131,6 +123,7 @@ function createInitialState(): StoreState {
     buzzerActive: false,
     buzzerSilenced: false,
     buzzerManualOverride: null,
+    activeSession: null,
   };
 }
 
@@ -138,10 +131,6 @@ function createInitialState(): StoreState {
 // INTERNAL HELPERS
 // ─────────────────────────────────────────────────────────────────────────────
 
-/**
- * Project all stored telemetry readings into the {@link TemperatureReading}
- * shape expected by `lib/kinetics.ts`.
- */
 function toKineticsReadings(readings: TelemetryReading[]): TemperatureReading[] {
   return [...readings]
     .sort((a, b) => a.timestamp - b.timestamp)
@@ -151,40 +140,48 @@ function toKineticsReadings(readings: TelemetryReading[]): TemperatureReading[] 
     }));
 }
 
-/**
- * Recompute and persist the kinetic snapshot from the current readings array.
- * Also evaluates the buzzer alert threshold after each recomputation.
- */
 function recomputeSnapshot(): void {
   if (_state.readings.length === 0) return;
 
   const kineticsReadings = toKineticsReadings(_state.readings);
+  const session = _state.activeSession;
+
+  const options = session
+    ? {
+        min_temp_celsius: session.minTemp,
+        max_temp_celsius: session.maxTemp,
+        freeze_limit_celsius: session.vaccineTier === "STANDARD_REFRIGERATED" ? 0.0 : undefined,
+      }
+    : undefined;
+
   _state.currentSnapshot = computeColdChainSnapshot(
     kineticsReadings,
-    _state.destinationEtaHours
+    _state.destinationEtaHours,
+    options
   );
 
   const latest = _state.readings[_state.readings.length - 1];
   const currentTemp = latest?.temperature ?? 4.0;
 
-  // Thermal excursion: outside WHO 2°C – 8°C cold chain envelope
-  const isThermalExcursion = currentTemp > 8.0 || currentTemp < 2.0;
+  const minAllowed = session ? session.minTemp : 2.0;
+  const maxAllowed = session ? session.maxTemp : 8.0;
+
+  // Thermal excursion: outside the allowed temperature range
+  const isThermalExcursion = currentTemp > maxAllowed || currentTemp < minAllowed;
 
   // Spoilage risk: time-to-spoil is shorter than transit ETA, or under threshold window
   const tts = _state.currentSnapshot.time_to_spoil_hours;
   const isSpoilRisk = tts <= _state.destinationEtaHours || tts <= BUZZER_ALERT_THRESHOLD_HOURS;
 
-  // Status check: any non-nominal status is an alert
+  // Status check: non-nominal
   const isStatusAlert = _state.currentSnapshot.evaluation.status !== "NOMINAL";
 
   const isAlarmTriggered = isThermalExcursion || isSpoilRisk || isStatusAlert;
 
   if (!isAlarmTriggered) {
-    // If all safe & nominal, auto-reset the silence latch and silence buzzer
     _state.buzzerSilenced = false;
     _state.buzzerActive = false;
   } else {
-    // Breach is active: sound buzzer unless manually silenced by operator
     if (!_state.buzzerSilenced) {
       _state.buzzerActive = true;
     } else {
@@ -206,11 +203,9 @@ function recomputeSnapshot(): void {
 
 /**
  * Add a new telemetry reading to the store.
- *
- * - Appends the reading to the FIFO queue (evicts oldest if queue is full).
- * - Immediately recomputes the kinetic snapshot.
- *
- * @param reading  Validated telemetry payload from the ESP32.
+ * - Appends to FIFO queue
+ * - Recomputes kinetic snapshot
+ * - If session is active, updates session stats and persists log to PostgreSQL
  */
 export function addReading(reading: TelemetryReading): void {
   if (_state.readings.length >= MAX_READINGS) {
@@ -218,82 +213,132 @@ export function addReading(reading: TelemetryReading): void {
   }
   _state.readings.push(reading);
   recomputeSnapshot();
+
+  // If an active session is running, track stats and archive to database
+  if (_state.activeSession) {
+    const s = _state.activeSession;
+    s.totalReadings += 1;
+    s.sumTemp = (s.sumTemp ?? 0) + reading.temperature;
+
+    if (s.minRecordedTemp === undefined || s.minRecordedTemp === null || reading.temperature < s.minRecordedTemp) {
+      s.minRecordedTemp = reading.temperature;
+    }
+    if (s.maxRecordedTemp === undefined || s.maxRecordedTemp === null || reading.temperature > s.maxRecordedTemp) {
+      s.maxRecordedTemp = reading.temperature;
+    }
+
+    const isExcursion = reading.temperature < s.minTemp || reading.temperature > s.maxTemp;
+    if (isExcursion) {
+      s.excursionCount += 1;
+    }
+
+    // Asynchronously insert log into database without blocking the response
+    prisma.telemetryLog
+      .create({
+        data: {
+          sessionId: s.id,
+          deviceId: reading.device_id,
+          timestamp: new Date(reading.timestamp * 1000),
+          temperature: reading.temperature,
+          humidity: reading.humidity,
+          latitude: reading.latitude,
+          longitude: reading.longitude,
+          speedKmh: reading.speed_kmh,
+          viability: _state.currentSnapshot?.cumulative_viability ?? null,
+          isExcursion,
+        },
+      })
+      .catch((err) => {
+        // Silently catch to prevent telemetry interruption if DB connection is intermittent
+        console.warn("[Store] Database telemetry log insert failed:", err?.message);
+      });
+  }
 }
 
-/**
- * Return a shallow copy of the current store state.
- */
+/** Return current in-memory store state. */
 export function getStore(): Readonly<StoreState> {
   return _state;
 }
 
-/**
- * Wipe all readings and reset the store to its initial state.
- */
+/** Reset in-memory store to clean initial state. */
 export function resetStore(): void {
   _state = createInitialState();
 }
 
-/**
- * Update the remaining ETA and immediately recompute the snapshot.
- *
- * @param hours  New ETA  [hr]  Must be >= 0.
- */
+/** Get active transit session info. */
+export function getActiveSession(): ActiveSessionInfo | null {
+  return _state.activeSession;
+}
+
+/** Set active transit session in memory and configure shipment meta. */
+export function setActiveSession(session: ActiveSessionInfo): void {
+  _state.activeSession = { ...session };
+  _state.readings = []; // Reset readings for the new voyage
+  _state.currentSnapshot = null;
+  _state.destinationEtaHours = session.etaHours;
+  _state.shipmentMeta = {
+    id: session.sessionCode,
+    name: session.vaccineName,
+    origin: session.origin,
+    destination: session.destination,
+    destinationLat: session.destinationLat ?? undefined,
+    destinationLng: session.destinationLng ?? undefined,
+  };
+  _state.buzzerSilenced = false;
+  _state.buzzerActive = false;
+  _state.buzzerManualOverride = null;
+}
+
+/** End the active transit session and clear from store. */
+export function endActiveSession(): ActiveSessionInfo | null {
+  const current = _state.activeSession;
+  _state.activeSession = null;
+  _state.shipmentMeta = { ...DEFAULT_META };
+  return current;
+}
+
+/** Update remaining transit ETA. */
 export function setEta(hours: number): void {
   if (hours < 0) {
     throw new RangeError(`ETA must be >= 0. Got ${hours} hr.`);
   }
   _state.destinationEtaHours = hours;
+  if (_state.activeSession) {
+    _state.activeSession.etaHours = hours;
+  }
   recomputeSnapshot();
 }
 
-/**
- * Update shipment metadata (name, origin, destination, id, coordinates).
- */
+/** Update shipment metadata. */
 export function setShipmentMeta(meta: Partial<ShipmentMeta>): void {
   _state.shipmentMeta = { ..._state.shipmentMeta, ...meta };
   recomputeSnapshot();
 }
 
-/**
- * Silence the buzzer from the dashboard.
- * Sets buzzerActive to false and buzzerSilenced to true so it won't
- * re-trigger until manual re-arm or conditions return to safe.
- */
+/** Silence buzzer. */
 export function silenceBuzzer(): void {
   _state.buzzerActive = false;
   _state.buzzerSilenced = true;
   _state.buzzerManualOverride = null;
 }
 
-/**
- * Re-arm the buzzer (clears the silenced flag so future or existing
- * threshold breaches immediately trigger it again).
- */
+/** Re-arm buzzer. */
 export function rearmBuzzer(): void {
   _state.buzzerSilenced = false;
   _state.buzzerManualOverride = null;
   recomputeSnapshot();
 }
 
-/**
- * Test buzzer manually from the dashboard.
- */
+/** Test buzzer. */
 export function testBuzzer(): void {
   _state.buzzerManualOverride = true;
   _state.buzzerActive = true;
 }
 
-/**
- * Clear manual test override.
- */
+/** Clear test override. */
 export function clearManualOverride(): void {
   _state.buzzerManualOverride = null;
   recomputeSnapshot();
 }
-
-// ─────────────────────────────────────────────────────────────────────────────
-// RE-EXPORTS FOR CONVENIENCE
-// ─────────────────────────────────────────────────────────────────────────────
 
 export { V_BASELINE, V_THRESHOLD };

@@ -10,9 +10,12 @@ import TelemetryTable from "@/components/TelemetryTable";
 import LiveMap from "@/components/LiveMap";
 import BuzzerControlCard from "@/components/BuzzerControlCard";
 import DestinationConfigCard from "@/components/DestinationConfigCard";
+import CreateSessionView from "@/components/CreateSessionView";
+import SessionHistoryView from "@/components/SessionHistoryView";
+import EndSessionModal from "@/components/EndSessionModal";
 import type { ColdChainSnapshot, ShipmentStatus } from "@/lib/kinetics";
 import { arrheniusRateConstant } from "@/lib/kinetics";
-import type { TelemetryReading, ShipmentMeta } from "@/lib/store";
+import type { TelemetryReading, ShipmentMeta, ActiveSessionInfo } from "@/lib/store";
 import {
   Thermometer,
   Droplets,
@@ -28,14 +31,16 @@ import {
   WifiOff,
 } from "lucide-react";
 
+type ViewMode = "DASHBOARD" | "CREATE_SESSION" | "HISTORY";
+
 export default function ColdChainDashboardPage() {
   const [snapshot, setSnapshot] = useState<ColdChainSnapshot | null>(null);
   const [readings, setReadings] = useState<TelemetryReading[]>([]);
   const [meta, setMeta] = useState<ShipmentMeta>({
-    id: "COV-902",
-    name: "Active Vaccine Transit",
-    origin: "Cold Hub, Pune",
-    destination: "District Hospital, Mumbai",
+    id: "—",
+    name: "Agesichain Fleet",
+    origin: "—",
+    destination: "—",
     destinationLat: 18.9822,
     destinationLng: 72.8335,
   });
@@ -46,6 +51,11 @@ export default function ColdChainDashboardPage() {
   const [buzzerActive, setBuzzerActive] = useState<boolean>(false);
   const [buzzerLoading, setBuzzerLoading] = useState<boolean>(false);
   const [routeUpdating, setRouteUpdating] = useState<boolean>(false);
+
+  // Session state
+  const [activeSession, setActiveSession] = useState<ActiveSessionInfo | null>(null);
+  const [viewMode, setViewMode] = useState<ViewMode>("CREATE_SESSION");
+  const [isEndModalOpen, setIsEndModalOpen] = useState<boolean>(false);
 
   const isMountedRef = useRef(true);
 
@@ -63,6 +73,13 @@ export default function ColdChainDashboardPage() {
       if (typeof data.eta_hours === "number") setEtaHours(data.eta_hours);
       if (typeof data.buzzer_active === "boolean") setBuzzerActive(data.buzzer_active);
       if (typeof data.is_connected === "boolean") setIsConnected(data.is_connected);
+
+      if (data.active_session) {
+        setActiveSession(data.active_session);
+      } else {
+        setActiveSession(null);
+      }
+
       setLastUpdated(Math.floor(Date.now() / 1000));
       setPollError(null);
     } catch (err: unknown) {
@@ -71,6 +88,26 @@ export default function ColdChainDashboardPage() {
       setPollError(msg);
       setIsConnected(false);
     }
+  }, []);
+
+  // Fetch initial active session on load to set view mode
+  useEffect(() => {
+    const initSession = async () => {
+      try {
+        const res = await fetch("/api/sessions/active", { cache: "no-store" });
+        const data = await res.json();
+        if (data.activeSession) {
+          setActiveSession(data.activeSession);
+          setViewMode("DASHBOARD");
+        } else {
+          setActiveSession(null);
+          setViewMode("CREATE_SESSION");
+        }
+      } catch (e) {
+        console.error("Failed to check active session on init:", e);
+      }
+    };
+    initSession();
   }, []);
 
   // Silence, re-arm, or test the buzzer from the dashboard
@@ -135,6 +172,20 @@ export default function ColdChainDashboardPage() {
     };
   }, [fetchTelemetry]);
 
+  // Handle session created callback
+  const handleSessionCreated = () => {
+    fetchTelemetry();
+    setViewMode("DASHBOARD");
+  };
+
+  // Handle session ended callback
+  const handleSessionEnded = () => {
+    setIsEndModalOpen(false);
+    setActiveSession(null);
+    fetchTelemetry();
+    setViewMode("HISTORY");
+  };
+
   // ── Derived state ─────────────────────────────────────────────────────────
   const status: ShipmentStatus = snapshot?.evaluation.status ?? "NOMINAL";
   const latestReading = readings.length > 0 ? readings[readings.length - 1] : null;
@@ -143,7 +194,7 @@ export default function ColdChainDashboardPage() {
   const humidity = latestReading?.humidity ?? null;
 
   const { rate_constant_per_hour: kRate } = arrheniusRateConstant({
-    temperature_celsius: currentTemp ?? 4.0,
+    temperature_celsius: currentTemp ?? (activeSession ? activeSession.minTemp + 2 : 4.0),
   });
 
   const timeToSpoil = snapshot?.time_to_spoil_hours ?? null;
@@ -151,325 +202,369 @@ export default function ColdChainDashboardPage() {
     ? currentViability * Math.exp(-kRate * etaHours) * 100
     : null;
 
+  // Temperature envelope check
+  const minAllowed = activeSession ? activeSession.minTemp : 2.0;
+  const maxAllowed = activeSession ? activeSession.maxTemp : 8.0;
+
   return (
     <div className="min-h-screen bg-[#04070f] text-slate-100 flex flex-col p-4 md:p-8 lg:p-10 max-w-[1500px] mx-auto w-full gap-6">
-      {/* 1. HEADER */}
-      <ShipmentHeader
-        meta={meta}
-        status={status}
-        lastUpdated={lastUpdated}
-        etaHours={etaHours}
-        isConnected={isConnected}
-        onRefresh={fetchTelemetry}
-      />
-
-      {/* 2. DEVICE DISCONNECTED BANNER */}
-      {!isConnected && (
-        <div className="glass rounded-2xl p-5 border border-slate-700/60 bg-slate-900/60 flex items-start gap-4 animate-in fade-in duration-300">
-          <div className="h-10 w-10 rounded-xl bg-slate-800 border border-slate-700 flex items-center justify-center flex-shrink-0 text-slate-400">
-            <WifiOff className="h-6 w-6" />
-          </div>
-          <div>
-            <h3 className="text-sm font-bold text-slate-200 uppercase tracking-wider">
-              Waiting for ESP32 Connection
-            </h3>
-            <p className="mt-1 text-xs text-slate-400 leading-relaxed">
-              No telemetry received in the last 5 seconds. Ensure the ESP32 is powered on, connected to the network, and configured to POST data to this server. Dashboard will update automatically when data arrives.
-            </p>
-            {pollError && (
-              <p className="mt-2 text-xs text-red-400 mono">{pollError}</p>
-            )}
-          </div>
-        </div>
-      )}
-
-      {/* 3. BUZZER ALERT BANNER */}
-      {buzzerActive && (
-        <div className="glass scan-line rounded-2xl p-5 border border-orange-500/60 bg-orange-950/40 flex items-start gap-4 glow-critical animate-in fade-in duration-300">
-          <div className="h-10 w-10 rounded-xl bg-orange-500/20 border border-orange-500/50 flex items-center justify-center flex-shrink-0 text-orange-400">
-            <Bell className="h-6 w-6 animate-bounce" />
-          </div>
-          <div className="flex-1">
-            <h3 className="text-sm font-bold text-orange-200 uppercase tracking-wider flex items-center gap-2">
-              ⚠ BUZZER ACTIVE — TEMPERATURE EXCURSION / SPOILAGE HAZARD
-            </h3>
-            <p className="mt-1 text-xs text-orange-300/90 leading-relaxed">
-              The physical ESP32 buzzer on GPIO 32 is actively buzzing! Chamber temperature is {currentTemp !== null ? currentTemp.toFixed(1) + "°C" : "—"} (outside safe WHO 2.0°C – 8.0°C cold envelope). Current viability: {(currentViability * 100).toFixed(2)}% | TTS: {timeToSpoil !== null ? timeToSpoil.toFixed(1) + "h" : "—"}. Click &quot;Silence Buzzer&quot; to silence it remotely.
-            </p>
-          </div>
-          <button
-            onClick={() => handleBuzzerControl("silence")}
-            disabled={buzzerLoading}
-            className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-orange-600 hover:bg-orange-500 border border-orange-400 text-white font-bold text-xs transition-all cursor-pointer disabled:opacity-50 shadow-lg shadow-orange-950/60 active:scale-95"
-          >
-            <BellOff className="h-4 w-4" />
-            Silence Buzzer
-          </button>
-        </div>
-      )}
-
-      {/* 4. CRITICAL / WARNING ALERT BANNERS */}
-      {status === "CRITICAL" && isConnected && !buzzerActive && (
-        <div className="glass scan-line rounded-2xl p-5 border border-red-500/40 bg-red-950/30 flex items-start gap-4 glow-critical animate-in fade-in duration-300">
-          <div className="h-10 w-10 rounded-xl bg-red-500/20 border border-red-500/40 flex items-center justify-center flex-shrink-0 text-red-400">
-            <AlertOctagon className="h-6 w-6 animate-bounce" />
-          </div>
-          <div>
-            <h3 className="text-sm font-bold text-red-200 uppercase tracking-wider">
-              {currentViability <= 0.8
-                ? "CRITICAL POTENCY BREACH — VACCINE SPOILED"
-                : timeToSpoil !== null && timeToSpoil <= etaHours
-                ? "CRITICAL TRANSIT DEFICIT — SPOILAGE BEFORE DELIVERY"
-                : currentTemp !== null && currentTemp <= 0.0
-                ? `CRITICAL FREEZE EXCURSION (${currentTemp.toFixed(1)}°C) — PROTEIN DENATURATION HAZARD`
-                : "CRITICAL COLD CHAIN ALERT"}
-            </h3>
-            <p className="mt-1 text-xs text-red-300/90 leading-relaxed">
-              {currentViability <= 0.8 ? (
-                <>
-                  Vaccine viability has dropped to <span className="font-semibold underline">{(currentViability * 100).toFixed(2)}%</span> (below the critical 80.00% threshold). Molecular potency is irreversibly lost. Quarantine batch immediately and do not administer.
-                </>
-              ) : timeToSpoil !== null && timeToSpoil <= etaHours ? (
-                <>
-                  Vaccine viability is currently <span className="font-semibold">{(currentViability * 100).toFixed(2)}%</span> (within safe potency limits), BUT the remaining safe window ({timeToSpoil.toFixed(1)}h) is shorter than remaining transit ETA ({etaHours.toFixed(1)}h). Product is projected to drop below 80% before arrival (projected {projViability !== null ? projViability.toFixed(2) + "%" : "—"} @ destination). Expedite transit or re-ice immediately to prevent batch failure.
-                </>
-              ) : currentTemp !== null && currentTemp <= 0.0 ? (
-                <>
-                  Chamber temperature is at or below freezing (<span className="font-semibold">{currentTemp.toFixed(1)}°C</span>). Liquid vaccines are vulnerable to freeze-denaturation. Immediate inspection required.
-                </>
-              ) : (
-                <>
-                  Shipment is under critical kinetic strain. Current viability is {(currentViability * 100).toFixed(2)}%. Immediate inspection required.
-                </>
-              )}
-            </p>
-          </div>
-        </div>
-      )}
-
-      {status === "WARNING" && isConnected && (
-        <div className="glass rounded-2xl p-5 border border-amber-500/40 bg-amber-950/30 flex items-start gap-4 glow-warning animate-in fade-in duration-300">
-          <div className="h-10 w-10 rounded-xl bg-amber-500/20 border border-amber-500/40 flex items-center justify-center flex-shrink-0 text-amber-400">
-            <AlertTriangle className="h-6 w-6" />
-          </div>
-          <div>
-            <h3 className="text-sm font-bold text-amber-200 uppercase tracking-wider">
-              {currentTemp !== null && (currentTemp > 8.0 || currentTemp < 2.0)
-                ? `THERMAL EXCURSION WARNING (${currentTemp.toFixed(1)}°C)`
-                : "VIABILITY BUFFER WARNING"}
-            </h3>
-            <p className="mt-1 text-xs text-amber-300/90 leading-relaxed">
-              {currentTemp !== null && (currentTemp > 8.0 || currentTemp < 2.0) ? (
-                <>
-                  Ambient temperature is at <span className="font-semibold">{currentTemp.toFixed(1)}°C</span> (WHO standard is 2.0°C – 8.0°C). Current viability is {(currentViability * 100).toFixed(2)}%. Viability buffer is narrowing. Inspect cooling unit.
-                </>
-              ) : (
-                <>
-                  Remaining safe transit buffer is approaching the destination ETA ({etaHours.toFixed(1)}h). Current viability: {(currentViability * 100).toFixed(2)}%. Monitor shipment progress closely.
-                </>
-              )}
-            </p>
-          </div>
-        </div>
-      )}
-
-      {/* 5. HERO OVERVIEW: VIABILITY GAUGE + KPI CARDS */}
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-stretch">
-        {/* Left: Viability Radial Gauge */}
-        <div className="lg:col-span-4 glass rounded-2xl p-6 flex flex-col items-center justify-between relative overflow-hidden">
-          <div className="w-full flex items-center justify-between border-b border-slate-800/80 pb-3">
-            <span className="text-[11px] font-bold uppercase tracking-wider text-slate-400">
-              Kinetic Potency State
-            </span>
-            <span className="text-[10px] mono text-slate-500">Real-Time Arc</span>
-          </div>
-
-          <div className="py-4 my-auto">
-            <ViabilityGauge viability={currentViability} status={status} />
-          </div>
-
-          <div className="w-full pt-3 border-t border-slate-800/80 flex items-center justify-between text-[11px] text-slate-400">
-            <span>Baseline: 100.00%</span>
-            <span className="mono">
-              Status: <strong className={status === "CRITICAL" ? "text-red-400" : status === "WARNING" ? "text-amber-400" : "text-emerald-400"}>{status}</strong>
-            </span>
-          </div>
-        </div>
-
-        {/* Right: Key Metrics Grid */}
-        <div className="lg:col-span-8 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
-          {/* 1. Core Temperature */}
-          <MetricCard
-            label="Chamber Temperature"
-            value={currentTemp !== null ? currentTemp.toFixed(2) : "—"}
-            unit={currentTemp !== null ? "°C" : ""}
-            subValue={
-              currentTemp === null
-                ? "No data yet"
-                : currentTemp >= 2 && currentTemp <= 8
-                ? "Optimal (WHO 2°C – 8°C)"
-                : currentTemp >= 25
-                ? "CRITICAL HEAT EXCURSION"
-                : currentTemp > 8
-                ? "Excursion (Above +8°C)"
-                : "Freeze Risk (Below +2°C)"
+      {/* 1. VIEW MODE ROUTING: HISTORY */}
+      {viewMode === "HISTORY" && (
+        <SessionHistoryView
+          onBack={() => {
+            if (activeSession) {
+              setViewMode("DASHBOARD");
+            } else {
+              setViewMode("CREATE_SESSION");
             }
-            icon={<Thermometer className="h-5 w-5" />}
-            accent={
-              currentTemp === null
-                ? "cyan"
-                : currentTemp >= 2 && currentTemp <= 8
-                ? "emerald"
-                : currentTemp >= 25 || currentTemp <= 0
-                ? "red"
-                : "amber"
-            }
-          />
-
-          {/* 2. Relative Humidity */}
-          <MetricCard
-            label="Relative Humidity"
-            value={humidity !== null ? humidity.toFixed(1) : "—"}
-            unit={humidity !== null ? "%" : ""}
-            subValue={humidity !== null ? "DHT / SHT Sensor" : "No data yet"}
-            icon={<Droplets className="h-5 w-5" />}
-            accent="cyan"
-          />
-
-          {/* 3. Arrhenius Rate Constant */}
-          <MetricCard
-            label="Arrhenius Constant (k)"
-            value={currentTemp !== null ? kRate.toExponential(2) : "—"}
-            unit={currentTemp !== null ? "hr⁻¹" : ""}
-            subValue="Molecular decay rate"
-            icon={<Gauge className="h-5 w-5" />}
-            accent="violet"
-          />
-
-          {/* 4. Projected Delivery Viability */}
-          <MetricCard
-            label="Viability @ Destination"
-            value={projViability !== null ? projViability.toFixed(2) : "—"}
-            unit={projViability !== null ? "%" : ""}
-            subValue={
-              projViability !== null
-                ? `Projected across ${etaHours.toFixed(1)}h ETA`
-                : "Awaiting first reading"
-            }
-            icon={<TrendingDown className="h-5 w-5" />}
-            accent={
-              projViability === null
-                ? "cyan"
-                : projViability < 80
-                ? "red"
-                : projViability < 85
-                ? "amber"
-                : "emerald"
-            }
-          />
-
-          {/* 5. Time-To-Spoil */}
-          <MetricCard
-            label="Time-to-Spoil (t_spoil)"
-            value={
-              timeToSpoil === null
-                ? "—"
-                : timeToSpoil === 0
-                ? "0.0"
-                : timeToSpoil.toFixed(1)
-            }
-            unit={timeToSpoil === null ? "" : "hrs"}
-            subValue={
-              timeToSpoil === null
-                ? "Awaiting first reading"
-                : timeToSpoil <= 0.5
-                ? "⚠ CRITICAL — Buzzer Active"
-                : timeToSpoil < etaHours
-                ? "⚠ Spoilage before delivery!"
-                : "Safe delivery window"
-            }
-            icon={<Hourglass className="h-5 w-5" />}
-            accent={
-              timeToSpoil !== null && timeToSpoil <= 0.5
-                ? "red"
-                : timeToSpoil !== null && timeToSpoil < etaHours
-                ? "amber"
-                : "cyan"
-            }
-          />
-
-          {/* 6. ESP32 Connection Node */}
-          <MetricCard
-            label="ESP32 Telemetry Node"
-            value={latestReading ? latestReading.device_id : "—"}
-            unit=""
-            subValue={
-              isConnected
-                ? `${readings.length} packets · Live`
-                : "Disconnected"
-            }
-            icon={
-              isConnected
-                ? <Wifi className="h-5 w-5" />
-                : <Cpu className="h-5 w-5" />
-            }
-            accent={isConnected ? "emerald" : "cyan"}
-          />
-        </div>
-      </div>
-
-      {/* 6. HARDWARE BUZZER REMOTE & SHIPMENT ROUTE PLANNER */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 items-stretch">
-        <DestinationConfigCard
-          meta={meta}
-          etaHours={etaHours}
-          timeToSpoil={timeToSpoil}
-          onUpdateRoute={handleUpdateRoute}
-          loading={routeUpdating}
-          currentLat={latestReading?.latitude}
-          currentLng={latestReading?.longitude}
+          }}
         />
-        <BuzzerControlCard
-          buzzerActive={buzzerActive}
-          currentTemp={currentTemp}
-          status={status}
-          onBuzzerAction={handleBuzzerControl}
-          loading={buzzerLoading}
+      )}
+
+      {/* 2. VIEW MODE ROUTING: CREATE SESSION LAUNCHPAD */}
+      {viewMode === "CREATE_SESSION" && !activeSession && (
+        <CreateSessionView
+          onSessionCreated={handleSessionCreated}
+          onOpenHistory={() => setViewMode("HISTORY")}
         />
-      </div>
+      )}
 
-      {/* 7. LIVE GPS MAP */}
-      <LiveMap
-        readings={readings}
-        isConnected={isConnected}
-        destinationMeta={meta}
-      />
+      {/* 3. VIEW MODE ROUTING: LIVE ACTIVE DASHBOARD */}
+      {(viewMode === "DASHBOARD" || activeSession) && viewMode !== "HISTORY" && (
+        <>
+          {/* HEADER */}
+          <ShipmentHeader
+            meta={meta}
+            status={status}
+            lastUpdated={lastUpdated}
+            etaHours={etaHours}
+            isConnected={isConnected}
+            activeSession={activeSession}
+            onRefresh={fetchTelemetry}
+            onEndSession={() => setIsEndModalOpen(true)}
+            onOpenHistory={() => setViewMode("HISTORY")}
+          />
 
-      {/* 8. REAL-TIME TELEMETRY CHARTS */}
-      <TelemetryCharts readings={readings} />
+          {/* DEVICE DISCONNECTED BANNER */}
+          {!isConnected && (
+            <div className="glass rounded-2xl p-5 border border-slate-700/60 bg-slate-900/60 flex items-start gap-4 animate-in fade-in duration-300">
+              <div className="h-10 w-10 rounded-xl bg-slate-800 border border-slate-700 flex items-center justify-center flex-shrink-0 text-slate-400">
+                <WifiOff className="h-6 w-6" />
+              </div>
+              <div>
+                <h3 className="text-sm font-bold text-slate-200 uppercase tracking-wider">
+                  Waiting for ESP32 Connection
+                </h3>
+                <p className="mt-1 text-xs text-slate-400 leading-relaxed">
+                  No telemetry received in the last 15 seconds. Ensure the ESP32 is powered on, connected to the hotspot, and transmitting data. Dashboard will stream automatically once readings arrive.
+                </p>
+                {pollError && (
+                  <p className="mt-2 text-xs text-red-400 mono">{pollError}</p>
+                )}
+              </div>
+            </div>
+          )}
 
-      {/* 8. KINETIC ENGINE MATHEMATICS */}
-      <KineticParametersCard
-        snapshot={snapshot}
-        currentTemp={currentTemp ?? 4.0}
-        etaHours={etaHours}
-      />
+          {/* BUZZER ALERT BANNER */}
+          {buzzerActive && (
+            <div className="glass scan-line rounded-2xl p-5 border border-orange-500/60 bg-orange-950/40 flex items-start gap-4 glow-critical animate-in fade-in duration-300">
+              <div className="h-10 w-10 rounded-xl bg-orange-500/20 border border-orange-500/50 flex items-center justify-center flex-shrink-0 text-orange-400">
+                <Bell className="h-6 w-6 animate-bounce" />
+              </div>
+              <div className="flex-1">
+                <h3 className="text-sm font-bold text-orange-200 uppercase tracking-wider flex items-center gap-2">
+                  ⚠ BUZZER ACTIVE — TEMPERATURE EXCURSION / SPOILAGE HAZARD
+                </h3>
+                <p className="mt-1 text-xs text-orange-300/90 leading-relaxed">
+                  The physical ESP32 buzzer on GPIO 32 is actively buzzing! Chamber temperature is{" "}
+                  {currentTemp !== null ? currentTemp.toFixed(1) + "°C" : "—"} (allowed: {minAllowed}°C to {maxAllowed}°C). Current viability:{" "}
+                  {(currentViability * 100).toFixed(2)}% | TTS: {timeToSpoil !== null ? timeToSpoil.toFixed(1) + "h" : "—"}.
+                </p>
+              </div>
+              <button
+                onClick={() => handleBuzzerControl("silence")}
+                disabled={buzzerLoading}
+                className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-orange-600 hover:bg-orange-500 border border-orange-400 text-white font-bold text-xs transition-all cursor-pointer disabled:opacity-50 shadow-lg shadow-orange-950/60 active:scale-95"
+              >
+                <BellOff className="h-4 w-4" />
+                Silence Buzzer
+              </button>
+            </div>
+          )}
 
-      {/* 9. TELEMETRY LOG TABLE */}
-      <TelemetryTable readings={readings} />
+          {/* CRITICAL / WARNING ALERT BANNERS */}
+          {status === "CRITICAL" && isConnected && !buzzerActive && (
+            <div className="glass scan-line rounded-2xl p-5 border border-red-500/40 bg-red-950/30 flex items-start gap-4 glow-critical animate-in fade-in duration-300">
+              <div className="h-10 w-10 rounded-xl bg-red-500/20 border border-red-500/40 flex items-center justify-center flex-shrink-0 text-red-400">
+                <AlertOctagon className="h-6 w-6 animate-bounce" />
+              </div>
+              <div>
+                <h3 className="text-sm font-bold text-red-200 uppercase tracking-wider">
+                  {currentViability <= 0.8
+                    ? "CRITICAL POTENCY BREACH — VACCINE SPOILED"
+                    : timeToSpoil !== null && timeToSpoil <= etaHours
+                    ? "CRITICAL TRANSIT DEFICIT — SPOILAGE BEFORE DELIVERY"
+                    : currentTemp !== null && activeSession?.vaccineTier === "STANDARD_REFRIGERATED" && currentTemp <= 0.0
+                    ? `CRITICAL FREEZE EXCURSION (${currentTemp.toFixed(1)}°C) — DENATURATION HAZARD`
+                    : "CRITICAL COLD CHAIN ALERT"}
+                </h3>
+                <p className="mt-1 text-xs text-red-300/90 leading-relaxed">
+                  {currentViability <= 0.8 ? (
+                    <>
+                      Vaccine viability has dropped to <span className="font-semibold underline">{(currentViability * 100).toFixed(2)}%</span> (below 80% threshold). Molecular potency is irreversibly lost. Quarantine batch immediately.
+                    </>
+                  ) : timeToSpoil !== null && timeToSpoil <= etaHours ? (
+                    <>
+                      Remaining safe window ({timeToSpoil.toFixed(1)}h) is shorter than transit ETA ({etaHours.toFixed(1)}h). Product is projected to drop below 80% before arrival. Expedite transit or re-ice immediately.
+                    </>
+                  ) : currentTemp !== null && activeSession?.vaccineTier === "STANDARD_REFRIGERATED" && currentTemp <= 0.0 ? (
+                    <>
+                      Chamber temperature is at or below freezing (<span className="font-semibold">{currentTemp.toFixed(1)}°C</span>). Adjuvant crystallizes at ≤0°C. Immediate inspection required.
+                    </>
+                  ) : (
+                    <>
+                      Shipment is under critical thermal strain. Chamber temperature: {currentTemp !== null ? `${currentTemp.toFixed(1)}°C` : "—"}. Allowed: {minAllowed}°C to {maxAllowed}°C.
+                    </>
+                  )}
+                </p>
+              </div>
+            </div>
+          )}
 
-      {/* 9. FOOTER */}
+          {status === "WARNING" && isConnected && (
+            <div className="glass rounded-2xl p-5 border border-amber-500/40 bg-amber-950/30 flex items-start gap-4 glow-warning animate-in fade-in duration-300">
+              <div className="h-10 w-10 rounded-xl bg-amber-500/20 border border-amber-500/40 flex items-center justify-center flex-shrink-0 text-amber-400">
+                <AlertTriangle className="h-6 w-6" />
+              </div>
+              <div>
+                <h3 className="text-sm font-bold text-amber-200 uppercase tracking-wider">
+                  {currentTemp !== null && (currentTemp > maxAllowed || currentTemp < minAllowed)
+                    ? `THERMAL EXCURSION WARNING (${currentTemp.toFixed(1)}°C)`
+                    : "VIABILITY BUFFER WARNING"}
+                </h3>
+                <p className="mt-1 text-xs text-amber-300/90 leading-relaxed">
+                  {currentTemp !== null && (currentTemp > maxAllowed || currentTemp < minAllowed) ? (
+                    <>
+                      Ambient temperature is at <span className="font-semibold">{currentTemp.toFixed(1)}°C</span> (Tier allowed range: {minAllowed}°C to {maxAllowed}°C). Current viability is {(currentViability * 100).toFixed(2)}%.
+                    </>
+                  ) : (
+                    <>
+                      Remaining safe transit buffer is approaching the destination ETA ({etaHours.toFixed(1)}h). Current viability: {(currentViability * 100).toFixed(2)}%. Monitor shipment progress closely.
+                    </>
+                  )}
+                </p>
+              </div>
+            </div>
+          )}
+
+          {/* HERO OVERVIEW: VIABILITY GAUGE + KPI CARDS */}
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-stretch">
+            {/* Left: Viability Radial Gauge */}
+            <div className="lg:col-span-4 glass rounded-2xl p-6 flex flex-col items-center justify-between relative overflow-hidden">
+              <div className="w-full flex items-center justify-between border-b border-slate-800/80 pb-3">
+                <span className="text-[11px] font-bold uppercase tracking-wider text-slate-400">
+                  Kinetic Potency State
+                </span>
+                <span className="text-[10px] mono text-cyan-400 font-bold">
+                  {activeSession?.sessionCode || "ACTIVE"}
+                </span>
+              </div>
+
+              <div className="py-4 my-auto">
+                <ViabilityGauge viability={currentViability} status={status} />
+              </div>
+
+              <div className="w-full pt-3 border-t border-slate-800/80 flex items-center justify-between text-[11px] text-slate-400">
+                <span>Baseline: 100.00%</span>
+                <span className="mono">
+                  Status: <strong className={status === "CRITICAL" ? "text-red-400" : status === "WARNING" ? "text-amber-400" : "text-emerald-400"}>{status}</strong>
+                </span>
+              </div>
+            </div>
+
+            {/* Right: Key Metrics Grid */}
+            <div className="lg:col-span-8 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
+              {/* 1. Core Temperature */}
+              <MetricCard
+                label="Chamber Temperature"
+                value={currentTemp !== null ? currentTemp.toFixed(2) : "—"}
+                unit={currentTemp !== null ? "°C" : ""}
+                subValue={
+                  currentTemp === null
+                    ? "No data yet"
+                    : currentTemp >= minAllowed && currentTemp <= maxAllowed
+                    ? `Optimal (${minAllowed}°C to ${maxAllowed}°C)`
+                    : currentTemp > maxAllowed
+                    ? `Above Max (${maxAllowed}°C)`
+                    : `Below Min (${minAllowed}°C)`
+                }
+                icon={<Thermometer className="h-5 w-5" />}
+                accent={
+                  currentTemp === null
+                    ? "cyan"
+                    : currentTemp >= minAllowed && currentTemp <= maxAllowed
+                    ? "emerald"
+                    : "red"
+                }
+              />
+
+              {/* 2. Relative Humidity */}
+              <MetricCard
+                label="Relative Humidity"
+                value={humidity !== null ? humidity.toFixed(1) : "—"}
+                unit={humidity !== null ? "%" : ""}
+                subValue={humidity !== null ? "DHT / SHT Sensor" : "No data yet"}
+                icon={<Droplets className="h-5 w-5" />}
+                accent="cyan"
+              />
+
+              {/* 3. Arrhenius Rate Constant */}
+              <MetricCard
+                label="Arrhenius Constant (k)"
+                value={currentTemp !== null ? kRate.toExponential(2) : "—"}
+                unit={currentTemp !== null ? "hr⁻¹" : ""}
+                subValue="Molecular decay rate"
+                icon={<Gauge className="h-5 w-5" />}
+                accent="violet"
+              />
+
+              {/* 4. Projected Delivery Viability */}
+              <MetricCard
+                label="Viability @ Destination"
+                value={projViability !== null ? projViability.toFixed(2) : "—"}
+                unit={projViability !== null ? "%" : ""}
+                subValue={
+                  projViability !== null
+                    ? `Projected across ${etaHours.toFixed(1)}h ETA`
+                    : "Awaiting first reading"
+                }
+                icon={<TrendingDown className="h-5 w-5" />}
+                accent={
+                  projViability === null
+                    ? "cyan"
+                    : projViability < 80
+                    ? "red"
+                    : projViability < 85
+                    ? "amber"
+                    : "emerald"
+                }
+              />
+
+              {/* 5. Time-To-Spoil */}
+              <MetricCard
+                label="Time-to-Spoil (t_spoil)"
+                value={
+                  timeToSpoil === null
+                    ? "—"
+                    : timeToSpoil === 0
+                    ? "0.0"
+                    : timeToSpoil.toFixed(1)
+                }
+                unit={timeToSpoil === null ? "" : "hrs"}
+                subValue={
+                  timeToSpoil === null
+                    ? "Awaiting first reading"
+                    : timeToSpoil <= 0.5
+                    ? "⚠ CRITICAL — Buzzer Active"
+                    : timeToSpoil < etaHours
+                    ? "⚠ Spoilage before delivery!"
+                    : "Safe delivery window"
+                }
+                icon={<Hourglass className="h-5 w-5" />}
+                accent={
+                  timeToSpoil !== null && timeToSpoil <= 0.5
+                    ? "red"
+                    : timeToSpoil !== null && timeToSpoil < etaHours
+                    ? "amber"
+                    : "cyan"
+                }
+              />
+
+              {/* 6. ESP32 Connection Node */}
+              <MetricCard
+                label="ESP32 Telemetry Node"
+                value={latestReading ? latestReading.device_id : "—"}
+                unit=""
+                subValue={
+                  isConnected
+                    ? `${readings.length} packets · Live`
+                    : "Disconnected"
+                }
+                icon={
+                  isConnected
+                    ? <Wifi className="h-5 w-5" />
+                    : <Cpu className="h-5 w-5" />
+                }
+                accent={isConnected ? "emerald" : "cyan"}
+              />
+            </div>
+          </div>
+
+          {/* HARDWARE BUZZER REMOTE & SHIPMENT ROUTE PLANNER */}
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 items-stretch">
+            <DestinationConfigCard
+              meta={meta}
+              etaHours={etaHours}
+              timeToSpoil={timeToSpoil}
+              onUpdateRoute={handleUpdateRoute}
+              loading={routeUpdating}
+              currentLat={latestReading?.latitude}
+              currentLng={latestReading?.longitude}
+            />
+            <BuzzerControlCard
+              buzzerActive={buzzerActive}
+              currentTemp={currentTemp}
+              status={status}
+              onBuzzerAction={handleBuzzerControl}
+              loading={buzzerLoading}
+            />
+          </div>
+
+          {/* LIVE GPS MAP */}
+          <LiveMap
+            readings={readings}
+            isConnected={isConnected}
+            destinationMeta={meta}
+          />
+
+          {/* REAL-TIME TELEMETRY CHARTS */}
+          <TelemetryCharts readings={readings} />
+
+          {/* KINETIC ENGINE MATHEMATICS */}
+          <KineticParametersCard
+            snapshot={snapshot}
+            currentTemp={currentTemp ?? (activeSession?.minTemp ? activeSession.minTemp + 2 : 4.0)}
+            etaHours={etaHours}
+          />
+
+          {/* TELEMETRY LOG TABLE */}
+          <TelemetryTable readings={readings} />
+
+          {/* MODAL: END SESSION */}
+          {activeSession && (
+            <EndSessionModal
+              session={activeSession}
+              snapshot={snapshot}
+              isOpen={isEndModalOpen}
+              onClose={() => setIsEndModalOpen(false)}
+              onSuccess={handleSessionEnded}
+            />
+          )}
+        </>
+      )}
+
+      {/* FOOTER */}
       <footer className="mt-6 pt-6 border-t border-slate-800/80 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-slate-500">
         <div className="flex items-center gap-2">
           <div className={`h-2 w-2 rounded-full ${isConnected ? "bg-emerald-400 animate-pulse" : "bg-slate-600"}`} />
           <span>Agesichain Cold-Chain Kinetic Intelligence System</span>
         </div>
         <div className="flex items-center gap-4 mono text-[11px]">
-          <span>Arrhenius Eₐ Engine</span>
+          <span>WHO / CDC Tier Validation</span>
           <span>·</span>
           <span>Next.js 14 App Router</span>
           <span>·</span>
-          <span>ESP32 WebSocket Ready</span>
+          <span>PostgreSQL Audit Engine</span>
         </div>
       </footer>
     </div>

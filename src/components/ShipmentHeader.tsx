@@ -4,9 +4,8 @@ import { cn, fmtTimestamp } from "@/lib/utils";
 import StatusBadge from "@/components/StatusBadge";
 import UserNav from "@/components/UserNav";
 import type { ShipmentStatus } from "@/lib/kinetics";
-import type { ShipmentMeta } from "@/lib/store";
+import type { ShipmentMeta, ActiveSessionInfo } from "@/lib/store";
 import {
-  ShieldCheck,
   MapPin,
   Truck,
   Clock,
@@ -14,6 +13,9 @@ import {
   WifiOff,
   RefreshCw,
   ThermometerSnowflake,
+  Archive,
+  History,
+  AlertTriangle,
 } from "lucide-react";
 
 interface ShipmentHeaderProps {
@@ -22,7 +24,10 @@ interface ShipmentHeaderProps {
   lastUpdated: number | null;
   etaHours: number;
   isConnected: boolean;
+  activeSession?: ActiveSessionInfo | null;
   onRefresh: () => void;
+  onEndSession?: () => void;
+  onOpenHistory?: () => void;
   className?: string;
 }
 
@@ -32,7 +37,10 @@ export default function ShipmentHeader({
   lastUpdated,
   etaHours,
   isConnected,
+  activeSession,
   onRefresh,
+  onEndSession,
+  onOpenHistory,
   className,
 }: ShipmentHeaderProps) {
   return (
@@ -55,6 +63,11 @@ export default function ShipmentHeader({
               <h1 className="text-xl md:text-2xl font-black text-slate-100 tracking-tight">
                 {meta.name}
               </h1>
+              {activeSession && (
+                <span className="text-[10px] font-bold tracking-wide uppercase px-2 py-0.5 rounded bg-cyan-950/80 text-cyan-300 border border-cyan-800/60 mono">
+                  {activeSession.vaccineTier.replace("_", " ")}
+                </span>
+              )}
               {meta.id !== "—" && (
                 <span className="mono text-xs font-semibold text-slate-400 bg-slate-800/80 px-2 py-0.5 rounded border border-slate-700/60">
                   {meta.id}
@@ -88,8 +101,32 @@ export default function ShipmentHeader({
           </div>
         </div>
 
-        {/* Right: Connection Status, Overall Status Badge & Refresh */}
-        <div className="flex flex-wrap items-center gap-4 lg:self-center">
+        {/* Right: Actions, Status & User */}
+        <div className="flex flex-wrap items-center gap-3 lg:self-center">
+          {/* History shortcut */}
+          {onOpenHistory && (
+            <button
+              onClick={onOpenHistory}
+              title="Shipment History & Audits"
+              className="px-3 py-2 rounded-xl bg-slate-900/80 hover:bg-slate-800 border border-slate-700/80 text-slate-300 hover:text-cyan-300 text-xs font-semibold flex items-center gap-1.5 transition-all cursor-pointer"
+            >
+              <History className="h-3.5 w-3.5 text-cyan-400" />
+              <span className="hidden sm:inline">History</span>
+            </button>
+          )}
+
+          {/* End Session Button */}
+          {onEndSession && activeSession && (
+            <button
+              onClick={onEndSession}
+              title="Conclude Active Transit Session"
+              className="px-3 py-2 rounded-xl bg-gradient-to-r from-amber-600/90 to-red-600/90 hover:from-amber-500 hover:to-red-500 text-white text-xs font-bold flex items-center gap-1.5 shadow-md shadow-red-950/40 hover:shadow-red-500/20 transition-all cursor-pointer"
+            >
+              <Archive className="h-3.5 w-3.5" />
+              <span>End Session</span>
+            </button>
+          )}
+
           {/* Live telemetry heartbeat */}
           <div className="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-slate-900/80 border border-slate-800 text-xs">
             {isConnected ? (

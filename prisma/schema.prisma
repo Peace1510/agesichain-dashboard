@@ -1,5 +1,5 @@
 // Prisma Schema for Agesichain Cold-Chain Dashboard
-// PostgreSQL + NextAuth v5 + Role-based auth
+// PostgreSQL + NextAuth v5 + Session Management + Telemetry Archival
 
 generator client {
   provider = "prisma-client-js"
@@ -12,25 +12,103 @@ datasource db {
 
 // ─── User roles ──────────────────────────────────────────────────────────────
 enum Role {
-  ADMIN   // Full access: dashboard + buzzer control + settings
+  ADMIN   // Full access: dashboard + buzzer control + start/end session + settings
   VIEWER  // Read-only: dashboard view only
+}
+
+// ─── Session Status ──────────────────────────────────────────────────────────
+enum SessionStatus {
+  ACTIVE
+  COMPLETED
+  TERMINATED
+}
+
+// ─── Vaccine Temperature Classification Tiers ────────────────────────────────
+enum VaccineTier {
+  STANDARD_REFRIGERATED  // +2°C to +8°C (e.g. DPT, Hep B, IPV, Influenza)
+  FROZEN                 // -25°C to -15°C (e.g. Oral Polio / OPV, Varicella)
+  ULTRA_COLD             // -80°C to -60°C (e.g. mRNA COVID-19 Pfizer-BioNTech)
 }
 
 // ─── User ────────────────────────────────────────────────────────────────────
 model User {
-  id            String    @id @default(cuid())
-  email         String    @unique
-  name          String?
-  password      String    // bcrypt hashed
-  role          Role      @default(VIEWER)
-  createdAt     DateTime  @default(now())
-  updatedAt     DateTime  @updatedAt
+  id              String           @id @default(cuid())
+  email           String           @unique
+  name            String?
+  password        String           // bcrypt hashed
+  role            Role             @default(VIEWER)
+  createdAt       DateTime         @default(now())
+  updatedAt       DateTime         @updatedAt
 
   // NextAuth relations
-  accounts      Account[]
-  sessions      Session[]
+  accounts        Account[]
+  sessions        Session[]
+  transitSessions TransitSession[]
 
   @@map("users")
+}
+
+// ─── Transit Session ─────────────────────────────────────────────────────────
+model TransitSession {
+  id              String        @id @default(cuid())
+  sessionCode     String        @unique // e.g. "SESS-2026-X89F"
+  vaccineName     String        // e.g. "DPT Inactivated Vaccine", "Oral Polio (OPV)"
+  vaccineTier     VaccineTier   // STANDARD_REFRIGERATED, FROZEN, ULTRA_COLD
+  minTemp         Float         // e.g. 2.0, -25.0, -80.0
+  maxTemp         Float         // e.g. 8.0, -15.0, -60.0
+  targetTemp      Float?        // e.g. 4.0, -20.0, -70.0
+  transportEquip  String?       // e.g. "Ice-lined refrigerator (ILR)", "Deep freezer", "Thermal shipper with dry ice"
+  batchNumber     String?       // e.g. "BAT-2026-09A"
+  origin          String        // e.g. "Cold Hub, Pune"
+  destination     String        // e.g. "District Hospital, Mumbai"
+  destinationLat  Float?
+  destinationLng  Float?
+  etaHours        Float         @default(2.5)
+  status          SessionStatus @default(ACTIVE)
+
+  startedAt       DateTime      @default(now())
+  endedAt         DateTime?
+
+  // Summary audit metrics populated upon session end:
+  totalReadings   Int           @default(0)
+  avgTemperature  Float?
+  minRecordedTemp Float?
+  maxRecordedTemp Float?
+  excursionCount  Int           @default(0) // Count of readings outside minTemp..maxTemp
+  finalViability  Float?        // Fraction [0.0 – 1.0]
+  finalStatus     String?       // NOMINAL | WARNING | CRITICAL
+
+  createdById     String?
+  createdBy       User?         @relation(fields: [createdById], references: [id])
+
+  telemetryLogs   TelemetryLog[]
+
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+
+  @@map("transit_sessions")
+}
+
+// ─── Telemetry Log Archival ──────────────────────────────────────────────────
+model TelemetryLog {
+  id          String         @id @default(cuid())
+  sessionId   String
+  session     TransitSession @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+  deviceId    String
+  timestamp   DateTime
+  temperature Float
+  humidity    Float
+  latitude    Float
+  longitude   Float
+  speedKmh    Float
+  viability   Float?
+  isExcursion Boolean        @default(false)
+
+  createdAt   DateTime       @default(now())
+
+  @@index([sessionId])
+  @@index([timestamp])
+  @@map("telemetry_logs")
 }
 
 // ─── NextAuth required tables ─────────────────────────────────────────────────

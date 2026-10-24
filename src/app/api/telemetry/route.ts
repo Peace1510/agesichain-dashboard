@@ -222,12 +222,13 @@ export async function GET(): Promise<NextResponse> {
   const is_connected = (nowS - lastTs) <= 15; // 15s window — tolerates TLS handshake delays on mobile hotspot
 
   const body = {
-    snapshot:     store.currentSnapshot,
-    history:      store.readings,
-    meta:         store.shipmentMeta,
-    eta_hours:    store.destinationEtaHours,
-    buzzer_active: store.buzzerActive,
+    snapshot:       store.currentSnapshot,
+    history:        store.readings,
+    meta:           store.shipmentMeta,
+    eta_hours:      store.destinationEtaHours,
+    buzzer_active:  store.buzzerActive,
     is_connected,
+    active_session: store.activeSession,
   };
 
   return NextResponse.json(body, {
