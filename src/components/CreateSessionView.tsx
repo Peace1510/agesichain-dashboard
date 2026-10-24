@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   ThermometerSnowflake,
   Shield,
@@ -34,7 +34,11 @@ export default function CreateSessionView({
 }: CreateSessionViewProps) {
   const [selectedTier, setSelectedTier] = useState<VaccineTierType>("STANDARD_REFRIGERATED");
   const [vaccineName, setVaccineName] = useState("DPT Inactivated Vaccine");
-  const [batchNumber, setBatchNumber] = useState(`BAT-2026-${Math.floor(1000 + Math.random() * 9000)}`);
+  const [batchNumber, setBatchNumber] = useState("BAT-2026-0000");
+
+  useEffect(() => {
+    setBatchNumber(`BAT-2026-${Math.floor(1000 + Math.random() * 9000)}`);
+  }, []);
   const [transportEquip, setTransportEquip] = useState(
     VACCINE_TIERS.STANDARD_REFRIGERATED.equipmentOptions[0]
   );
