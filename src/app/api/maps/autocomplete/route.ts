@@ -1,33 +1,28 @@
 import { NextRequest, NextResponse } from "next/server";
+import { getOlaMapsHeaders } from "@/lib/olamaps";
 
 export async function GET(req: NextRequest) {
-  // Read key inside handler — module-level const misses runtime env injection in standalone builds
-  const OLA_KEY =
-    process.env.OLA_MAPS_API_KEY ??
-    process.env.NEXT_PUBLIC_OLA_MAPS_API_KEY ??
-    "";
-
   const input = req.nextUrl.searchParams.get("input");
   if (!input || input.trim().length < 2) {
     return NextResponse.json({ predictions: [] });
   }
 
-  if (!OLA_KEY) {
-    console.error("[maps/autocomplete] OLA_MAPS_API_KEY is not set");
-    return NextResponse.json({ predictions: [], _error: "API key not configured" });
-  }
-
   try {
+    const headers = await getOlaMapsHeaders();
     const url = new URL("https://api.olamaps.io/places/v1/autocomplete");
     url.searchParams.set("input", input.trim());
-    url.searchParams.set("api_key", OLA_KEY);
+
+    // If API key is also available, pass as query param fallback
+    const apiKey =
+      process.env.OLA_MAPS_API_KEY ??
+      process.env.NEXT_PUBLIC_OLA_MAPS_API_KEY ??
+      "";
+    if (apiKey) {
+      url.searchParams.set("api_key", apiKey);
+    }
 
     const res = await fetch(url.toString(), {
-      headers: {
-        "X-Request-Id": crypto.randomUUID(),
-        "Origin": "https://ageischain.kirmadaa.tech",
-        "Referer": "https://ageischain.kirmadaa.tech/",
-      },
+      headers,
       next: { revalidate: 0 },
     });
 

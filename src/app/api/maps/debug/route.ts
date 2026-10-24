@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { getOlaMapsAccessToken, getOlaMapsHeaders } from "@/lib/olamaps";
 
 export async function GET() {
   const OLA_KEY =
@@ -10,21 +11,28 @@ export async function GET() {
     ? `${OLA_KEY.slice(0, 6)}...${OLA_KEY.slice(-4)} (len=${OLA_KEY.length})`
     : "NOT SET";
 
+  let tokenObtained = false;
+  let tokenPreview = "NONE";
   let olaResponse: unknown = null;
   let olaStatus: number | null = null;
   let olaError: string | null = null;
 
   try {
+    const token = await getOlaMapsAccessToken();
+    if (token) {
+      tokenObtained = true;
+      tokenPreview = `${token.slice(0, 10)}...${token.slice(-6)} (len=${token.length})`;
+    }
+
+    const headers = await getOlaMapsHeaders();
     const url = new URL("https://api.olamaps.io/places/v1/autocomplete");
     url.searchParams.set("input", "pune");
-    url.searchParams.set("api_key", OLA_KEY);
+    if (OLA_KEY) {
+      url.searchParams.set("api_key", OLA_KEY);
+    }
 
     const res = await fetch(url.toString(), {
-      headers: {
-        "X-Request-Id": "debug-test-001",
-        "Origin": "https://ageischain.kirmadaa.tech",
-        "Referer": "https://ageischain.kirmadaa.tech/",
-      },
+      headers,
     });
 
     olaStatus = res.status;
@@ -40,6 +48,8 @@ export async function GET() {
   }
 
   return NextResponse.json({
+    oauth_token_obtained: tokenObtained,
+    oauth_token_preview: tokenPreview,
     key_preview: keyPreview,
     ola_http_status: olaStatus,
     ola_response: olaResponse,

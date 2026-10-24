@@ -1,11 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
+import { getOlaMapsHeaders } from "@/lib/olamaps";
 
 export async function GET(req: NextRequest) {
-  const OLA_KEY =
-    process.env.OLA_MAPS_API_KEY ??
-    process.env.NEXT_PUBLIC_OLA_MAPS_API_KEY ??
-    "";
-
   const originLat = req.nextUrl.searchParams.get("originLat");
   const originLng = req.nextUrl.searchParams.get("originLng");
   const destLat = req.nextUrl.searchParams.get("destLat");
@@ -16,24 +12,44 @@ export async function GET(req: NextRequest) {
   }
 
   try {
+    const headers = await getOlaMapsHeaders();
     const url = new URL("https://api.olamaps.io/routing/v1/distanceMatrix");
     url.searchParams.set("origins", `${originLat},${originLng}`);
     url.searchParams.set("destinations", `${destLat},${destLng}`);
-    url.searchParams.set("api_key", OLA_KEY);
+
+    const apiKey =
+      process.env.OLA_MAPS_API_KEY ??
+      process.env.NEXT_PUBLIC_OLA_MAPS_API_KEY ??
+      "";
+    if (apiKey) {
+      url.searchParams.set("api_key", apiKey);
+    }
 
     const res = await fetch(url.toString(), {
-      headers: { "X-Request-Id": crypto.randomUUID() },
+      headers,
       next: { revalidate: 0 },
     });
 
-    if (!res.ok) throw new Error(`Ola Distance Matrix: ${res.status}`);
+    if (!res.ok) {
+      const errText = await res.text();
+      console.error(`[maps/eta] HTTP ${res.status}:`, errText);
+      throw new Error(`Ola Distance Matrix: ${res.status}`);
+    }
+
     const data = await res.json();
 
-    // rows[0].elements[0].duration.value is seconds
-    const durationSec: number =
-      data?.rows?.[0]?.elements?.[0]?.duration?.value ?? null;
-    const distanceM: number =
-      data?.rows?.[0]?.elements?.[0]?.distance?.value ?? null;
+    // Ola Maps can return either raw seconds/meters number or { value: number } object
+    const rawDuration = data?.rows?.[0]?.elements?.[0]?.duration;
+    const durationSec: number | null =
+      typeof rawDuration === "number"
+        ? rawDuration
+        : (rawDuration?.value ?? null);
+
+    const rawDistance = data?.rows?.[0]?.elements?.[0]?.distance;
+    const distanceM: number | null =
+      typeof rawDistance === "number"
+        ? rawDistance
+        : (rawDistance?.value ?? null);
 
     if (durationSec === null) throw new Error("No duration in response");
 
