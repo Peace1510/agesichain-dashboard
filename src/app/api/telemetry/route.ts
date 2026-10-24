@@ -219,7 +219,7 @@ export async function GET(): Promise<NextResponse> {
     ? store.readings[store.readings.length - 1]!.timestamp
     : 0;
   const nowS = Math.floor(Date.now() / 1000);
-  const is_connected = (nowS - lastTs) <= 5;
+  const is_connected = (nowS - lastTs) <= 15; // 15s window — tolerates TLS handshake delays on mobile hotspot
 
   const body = {
     snapshot:     store.currentSnapshot,

@@ -57,8 +57,8 @@ const char* SERVER_URL = "https://ageischain.kirmadaa.tech/api/telemetry";
 // Device Identifier
 const char* DEVICE_ID = "ESP32_01";
 
-// 1-second transmission interval
-const unsigned long readInterval = 1000;
+// 2-second transmission interval — gives TLS handshake room to breathe on mobile hotspot
+const unsigned long readInterval = 2000;
 
 // ────────────────────────────────────────────────────────────────────────────
 // 2. HARDWARE PIN DEFINITIONS
@@ -102,6 +102,11 @@ bool buzzerActiveFromServer = false;
 float lastViability = 100.0;
 float lastTimeToSpoil = 0.0;
 int packetCount = 0;
+
+// Persistent HTTPS client — reused across requests to avoid TLS re-handshake every cycle
+// This is the main fix for the connect/disconnect flicker on mobile hotspot.
+WiFiClientSecure secureClient;
+bool clientReady = false;
 
 // ────────────────────────────────────────────────────────────────────────────
 // 4. OLED ANIMATION FUNCTIONS
@@ -369,26 +374,41 @@ void loop() {
 
     // 4. Send HTTP POST to Cloud Server (https://ageischain.kirmadaa.tech/api/telemetry)
     if (WiFi.status() == WL_CONNECTED) {
-      WiFiClientSecure client;
-      client.setInsecure(); // Handles Cloudflare HTTPS encryption smoothly
+      // Initialise the persistent TLS client once (avoids full re-handshake every cycle)
+      if (!clientReady) {
+        secureClient.setInsecure(); // Trust Cloudflare certificate without CA bundle
+        clientReady = true;
+        Serial.println(F("[TLS] Secure client initialised"));
+      }
 
       HTTPClient http;
-      if (http.begin(client, SERVER_URL)) {
+      if (http.begin(secureClient, SERVER_URL)) {
         http.addHeader("Content-Type", "application/json");
-        http.setTimeout(900); // 900ms timeout keeps loop responsive
+        http.setTimeout(5000); // 5-second timeout — enough for TLS + mobile hotspot latency
+        http.setConnectTimeout(5000);
 
         int httpResponseCode = http.POST(jsonPayload);
         if (httpResponseCode > 0) {
           String response = http.getString();
           parseServerResponse(response);
-        } else {
-          Serial.print(F("[HTTP ERROR] "));
+          Serial.print(F("[HTTP] Response code: "));
           Serial.println(httpResponseCode);
+        } else {
+          Serial.print(F("[HTTP ERROR] Code: "));
+          Serial.print(httpResponseCode);
+          Serial.println(F(" — retrying next cycle"));
+          // Reset client so next cycle re-initialises TLS if connection broke
+          clientReady = false;
         }
         http.end();
+      } else {
+        Serial.println(F("[HTTP] Failed to begin — resetting TLS client"));
+        clientReady = false;
       }
     } else {
-      // Reconnect in background if hotspot drops
+      // WiFi dropped — reconnect and reset TLS client
+      Serial.println(F("[WiFi] Disconnected — reconnecting..."));
+      clientReady = false;
       WiFi.reconnect();
     }
 
