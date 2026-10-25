@@ -368,12 +368,13 @@ export default function CreateSessionView({
               <div className="relative">
                 <input
                   type="number"
-                  step="0.1"
-                  min="0.5"
+                  step="0.01"
+                  min="0.01"
                   max="120"
                   required
                   value={etaHours}
-                  onChange={(e) => setEtaHours(parseFloat(e.target.value) || 2.5)}
+                  onChange={(e) => setEtaHours(parseFloat(e.target.value) || 0.1)}
+
                   className={`w-full px-3.5 py-2.5 pr-10 bg-slate-900/80 border rounded-xl text-sm text-slate-100 font-mono focus:outline-none transition-colors ${
                     etaLoading
                       ? "border-cyan-500/60 animate-pulse"
