@@ -27,25 +27,36 @@ const MAP_STYLES: Record<MapTheme, { name: string; style: unknown }> = {
     style: {
       version: 8,
       sources: {
-        "carto-dark": {
+        "esri-dark": {
           type: "raster",
           tiles: [
-            "https://a.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}@2x.png",
-            "https://b.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}@2x.png",
-            "https://c.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}@2x.png",
-            "https://d.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}@2x.png",
+            "https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Dark_Gray_Base/MapServer/tile/{z}/{y}/{x}",
           ],
           tileSize: 256,
-          attribution: "&copy; OpenStreetMap contributors &copy; CARTO",
+          attribution: "&copy; Esri, HERE, Garmin, &copy; OpenStreetMap contributors",
+        },
+        "esri-dark-labels": {
+          type: "raster",
+          tiles: [
+            "https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Dark_Gray_Reference/MapServer/tile/{z}/{y}/{x}",
+          ],
+          tileSize: 256,
         },
       },
       layers: [
         {
-          id: "carto-dark-layer",
+          id: "esri-dark-base",
           type: "raster",
-          source: "carto-dark",
+          source: "esri-dark",
           minzoom: 0,
-          maxzoom: 20,
+          maxzoom: 19,
+        },
+        {
+          id: "esri-dark-ref",
+          type: "raster",
+          source: "esri-dark-labels",
+          minzoom: 0,
+          maxzoom: 19,
         },
       ],
     },
@@ -478,18 +489,18 @@ export default function LiveMap({
   }, [lat, lng, speed, temp, mapLoaded, trailReadings, destinationMeta]);
 
   return (
-    <div className="glass rounded-2xl overflow-hidden relative flex flex-col border border-slate-800/80">
+    <div className="glass rounded-2xl overflow-hidden relative flex flex-col border border-white/[0.08] shadow-lg">
       {/* 1. Header Toolbar */}
-      <div className="flex flex-wrap items-center justify-between px-5 py-4 border-b border-slate-800/80 bg-slate-950/40 gap-3">
+      <div className="flex flex-wrap items-center justify-between px-5 py-3.5 border-b border-white/[0.06] bg-slate-900/50 backdrop-blur-md gap-3">
         <div className="flex items-center gap-2.5">
-          <div className="h-8 w-8 rounded-lg bg-cyan-500/10 border border-cyan-500/30 flex items-center justify-center text-cyan-400">
+          <div className="h-8 w-8 rounded-lg bg-blue-500/10 border border-blue-500/25 flex items-center justify-center text-blue-400">
             <MapPin className="h-4 w-4" />
           </div>
           <div>
-            <h2 className="text-sm md:text-base font-bold text-slate-100 tracking-tight flex items-center gap-2">
-              Live Container Telemetric Map
-              <span className="text-[10px] font-mono px-2 py-0.5 rounded-full bg-cyan-950/80 text-cyan-400 border border-cyan-800/50">
-                HD Vector GIS
+            <h2 className="text-sm font-bold text-slate-100 tracking-tight flex items-center gap-2">
+              Container Telemetry Map
+              <span className="text-[10px] font-mono px-2 py-0.5 rounded-full bg-blue-950/70 text-blue-300 border border-blue-800/40 font-medium">
+                Live GIS
               </span>
             </h2>
             <p className="text-[11px] text-slate-400">
@@ -500,14 +511,14 @@ export default function LiveMap({
 
         <div className="flex flex-wrap items-center gap-2">
           {/* Style Selector */}
-          <div className="flex items-center rounded-xl bg-slate-900 border border-slate-800 p-0.5 text-xs">
+          <div className="flex items-center rounded-xl bg-slate-950/70 border border-slate-800/90 p-0.5 text-xs">
             {(["dark", "satellite", "streets"] as MapTheme[]).map((theme) => (
               <button
                 key={theme}
                 onClick={() => handleThemeChange(theme)}
                 className={`px-2.5 py-1 rounded-lg font-medium transition-all text-[11px] capitalize cursor-pointer ${
                   mapTheme === theme
-                    ? "bg-cyan-500/20 text-cyan-300 border border-cyan-500/40"
+                    ? "bg-blue-600 text-white shadow-sm"
                     : "text-slate-400 hover:text-slate-200"
                 }`}
               >
@@ -521,16 +532,16 @@ export default function LiveMap({
             <button
               onClick={handleRecenter}
               title="Snap camera to container"
-              className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-slate-900 hover:bg-slate-800 border border-slate-800 hover:border-cyan-500/50 text-slate-300 hover:text-cyan-300 text-xs font-medium transition-all cursor-pointer"
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-slate-950/70 hover:bg-slate-800 border border-slate-800 hover:border-blue-500/40 text-slate-300 hover:text-blue-300 text-xs font-medium transition-all cursor-pointer"
             >
-              <Crosshair className="h-3.5 w-3.5 text-cyan-400" />
+              <Crosshair className="h-3.5 w-3.5 text-blue-400" />
               <span>Center</span>
             </button>
           )}
 
           {/* Speed badge */}
           {isConnected && lat !== null && (
-            <div className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl bg-slate-900 border border-slate-800 text-xs mono">
+            <div className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl bg-slate-950/70 border border-slate-800 text-xs mono">
               <Navigation className="h-3.5 w-3.5 text-emerald-400" />
               <span className="text-slate-300">
                 {speed > 0.5 ? (
@@ -549,14 +560,14 @@ export default function LiveMap({
 
           {/* Coordinate badge */}
           {lat !== null && lng !== null ? (
-            <div className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl bg-slate-900 border border-slate-800 text-[11px] mono text-slate-300">
-              <Satellite className="h-3.5 w-3.5 text-violet-400" />
+            <div className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl bg-slate-950/70 border border-slate-800 text-[11px] mono text-slate-300">
+              <Satellite className="h-3.5 w-3.5 text-indigo-400" />
               <span>
                 {lat.toFixed(5)}, {lng.toFixed(5)}
               </span>
             </div>
           ) : (
-            <div className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl bg-slate-900 border border-slate-800 text-[11px] mono text-amber-400">
+            <div className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl bg-slate-950/70 border border-slate-800 text-[11px] mono text-amber-400">
               <Compass className="h-3.5 w-3.5 animate-spin" />
               <span>Acquiring GPS...</span>
             </div>
@@ -565,7 +576,7 @@ export default function LiveMap({
       </div>
 
       {/* 2. Map Canvas Container */}
-      <div className="relative w-full" style={{ height: "460px" }}>
+      <div className="relative w-full" style={{ height: "420px" }}>
         {/* Waiting placeholder overlay if no GPS coordinates yet */}
         {lat === null && (
           <div className="absolute inset-0 flex flex-col items-center justify-center gap-3 bg-slate-950/70 z-10 backdrop-blur-xs">

@@ -18,32 +18,38 @@ export default function TelemetryTable({ readings, className }: TelemetryTablePr
   }, [readings]);
 
   return (
-    <div className={cn("glass rounded-2xl p-6 relative overflow-hidden flex flex-col gap-4", className)}>
-      {/* Top accent */}
-      <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-cyan-500/30 via-slate-600/30 to-transparent" />
-
-      {/* Header */}
-      <div className="flex items-center justify-between border-b border-slate-800/80 pb-4">
-        <div className="flex items-center gap-2.5">
-          <Table className="h-5 w-5 text-cyan-400" />
-          <h2 className="text-base font-bold text-slate-100 tracking-tight">
-            Telemetry Ingestion Log
-          </h2>
+    <div className={cn("flex flex-col gap-4 pt-1", className)}>
+      {/* Subheader */}
+      <div className="flex flex-wrap items-center justify-between gap-2.5 pb-2 border-b border-white/[0.06]">
+        <div className="flex items-center gap-2">
+          <div className="h-7 w-7 rounded-lg bg-blue-500/10 border border-blue-500/20 flex items-center justify-center text-blue-400">
+            <Table className="h-4 w-4" />
+          </div>
+          <div>
+            <h3 className="text-xs font-bold text-slate-200 tracking-tight">
+              Ingested Telemetry Stream
+            </h3>
+            <p className="text-[11px] text-slate-400">
+              Raw sensor packets received via ESP32 hardware radio or simulation pipeline
+            </p>
+          </div>
         </div>
-        <span className="text-[11px] font-semibold text-slate-400 mono">
-          {readings.length} Packets Received
-        </span>
+        <div className="flex items-center gap-2">
+          <span className="mono text-[11px] font-semibold text-blue-300 bg-blue-950/40 border border-blue-500/30 px-2.5 py-1 rounded-lg">
+            {readings.length} Packets Received
+          </span>
+        </div>
       </div>
 
       {readings.length === 0 ? (
-        <div className="py-12 text-center text-slate-500 text-xs">
+        <div className="py-12 text-center text-slate-400 text-xs rounded-xl bg-slate-900/40 border border-white/[0.06]">
           No telemetry logged yet. Data packets will populate automatically upon arrival.
         </div>
       ) : (
-        <div className="overflow-x-auto max-h-72 overflow-y-auto">
+        <div className="overflow-x-auto max-h-80 overflow-y-auto rounded-xl border border-white/[0.08] bg-slate-950/60 shadow-inner">
           <table className="w-full text-left border-collapse text-xs">
             <thead>
-              <tr className="border-b border-slate-800 text-[10px] uppercase font-bold tracking-wider text-slate-500 sticky top-0 bg-slate-950/90 backdrop-blur z-10">
+              <tr className="border-b border-white/[0.08] text-[10px] uppercase font-bold tracking-wider text-slate-400 sticky top-0 bg-slate-900/95 backdrop-blur z-10">
                 <th className="py-2.5 px-3">Timestamp</th>
                 <th className="py-2.5 px-3">Device ID</th>
                 <th className="py-2.5 px-3">Temp (°C)</th>
@@ -54,7 +60,7 @@ export default function TelemetryTable({ readings, className }: TelemetryTablePr
                 <th className="py-2.5 px-3">k (hr⁻¹)</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-slate-800/50">
+            <tbody className="divide-y divide-white/[0.04]">
               {reversed.map((r, i) => {
                 const isSafe = r.temperature >= 2.0 && r.temperature <= 8.0;
                 const { rate_constant_per_hour: k } = arrheniusRateConstant({
@@ -64,44 +70,44 @@ export default function TelemetryTable({ readings, className }: TelemetryTablePr
                 return (
                   <tr
                     key={`${r.timestamp}-${i}`}
-                    className="hover:bg-slate-800/30 transition-colors"
+                    className="hover:bg-slate-800/40 transition-colors"
                   >
-                    <td className="py-2 px-3 mono text-slate-300">
+                    <td className="py-2.5 px-3 mono text-slate-300">
                       {fmtTimestamp(r.timestamp)}
                     </td>
-                    <td className="py-2 px-3 mono text-slate-400 text-[11px]">
+                    <td className="py-2.5 px-3 mono text-slate-400 text-[11px]">
                       {r.device_id}
                     </td>
-                    <td className="py-2 px-3 mono font-semibold">
+                    <td className="py-2.5 px-3 mono font-semibold">
                       <span
                         className={cn(
-                          isSafe ? "text-emerald-400" : "text-red-400"
+                          isSafe ? "text-emerald-400" : "text-rose-400"
                         )}
                       >
                         {r.temperature.toFixed(2)} °C
                       </span>
                     </td>
-                    <td className="py-2 px-3">
+                    <td className="py-2.5 px-3">
                       {isSafe ? (
-                        <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-950/80 text-emerald-300 border border-emerald-800/60">
+                        <span className="inline-flex items-center px-2 py-0.5 rounded-md text-[10px] font-bold bg-emerald-500/10 text-emerald-300 border border-emerald-500/30">
                           SAFE
                         </span>
                       ) : (
-                        <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-red-950/80 text-red-300 border border-red-800/60 animate-pulse">
+                        <span className="inline-flex items-center px-2 py-0.5 rounded-md text-[10px] font-bold bg-rose-500/15 text-rose-300 border border-rose-500/40 animate-pulse">
                           EXCURSION
                         </span>
                       )}
                     </td>
-                    <td className="py-2 px-3 mono text-slate-400">
+                    <td className="py-2.5 px-3 mono text-slate-400">
                       {r.humidity.toFixed(1)}%
                     </td>
-                    <td className="py-2 px-3 mono text-[11px] text-slate-400">
+                    <td className="py-2.5 px-3 mono text-[11px] text-slate-400">
                       {r.latitude.toFixed(4)}, {r.longitude.toFixed(4)}
                     </td>
-                    <td className="py-2 px-3 mono text-slate-400">
+                    <td className="py-2.5 px-3 mono text-slate-400">
                       {r.speed_kmh.toFixed(1)} km/h
                     </td>
-                    <td className="py-2 px-3 mono text-[11px] text-violet-300">
+                    <td className="py-2.5 px-3 mono text-[11px] text-violet-300">
                       {k.toExponential(2)}
                     </td>
                   </tr>

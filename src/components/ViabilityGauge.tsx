@@ -72,11 +72,11 @@ export default function ViabilityGauge({
   const pct = (clamped * 100).toFixed(2);
 
   return (
-    <div className={cn("flex flex-col items-center gap-3", className)}>
+    <div className={cn("flex flex-col items-center justify-center gap-2", className)}>
       <div className="relative">
         <svg
-          width="200"
-          height="200"
+          width="190"
+          height="190"
           viewBox="0 0 160 160"
           className="overflow-visible"
           style={{ filter: cfg.glow }}
@@ -89,10 +89,9 @@ export default function ViabilityGauge({
             r={R}
             fill="none"
             stroke="rgba(255,255,255,0.06)"
-            strokeWidth="10"
+            strokeWidth="9"
             strokeLinecap="round"
             strokeDasharray={`${ARC_LEN.toFixed(2)} ${(CIRC - ARC_LEN).toFixed(2)}`}
-            /* rotate so arc starts at bottom-left (135°) */
             strokeDashoffset={0}
             transform="rotate(135 80 80)"
           />
@@ -104,7 +103,7 @@ export default function ViabilityGauge({
             r={R}
             fill="none"
             stroke={cfg.stroke}
-            strokeWidth="10"
+            strokeWidth="9"
             strokeLinecap="round"
             strokeDasharray={`${ARC_LEN.toFixed(2)} ${(CIRC - ARC_LEN).toFixed(2)}`}
             strokeDashoffset={dashOffset}
@@ -120,52 +119,49 @@ export default function ViabilityGauge({
               y1={tick.y1}
               x2={tick.x2}
               y2={tick.y2}
-              stroke="rgba(255,255,255,0.15)"
-              strokeWidth="1.5"
+              stroke="rgba(255,255,255,0.12)"
+              strokeWidth="1.2"
               strokeLinecap="round"
             />
           ))}
 
           {/* ── Center text ────────────────────────────────────────────────── */}
           <text
-            x="80" y="72"
+            x="80" y="74"
             textAnchor="middle"
-            fill={cfg.stroke}
-            fontSize="26"
+            fill="#ffffff"
+            fontSize="27"
             fontFamily="'JetBrains Mono', monospace"
-            fontWeight="700"
+            fontWeight="800"
             style={{ transition: "fill 0.4s ease" }}
           >
             {pct}%
           </text>
           <text
-            x="80" y="90"
+            x="80" y="92"
             textAnchor="middle"
-            fill="rgba(148,163,184,0.7)"
+            fill={cfg.stroke}
             fontSize="9"
             fontFamily="Inter, sans-serif"
-            fontWeight="500"
-            letterSpacing="2"
+            fontWeight="700"
+            letterSpacing="2.5"
           >
-            VIABILITY
+            POTENCY
           </text>
 
           {/* ── Scale labels ────────────────────────────────────────────────── */}
-          <text x="18" y="148" textAnchor="middle" fill="rgba(100,116,139,0.8)" fontSize="8" fontFamily="Inter">0%</text>
-          <text x="142" y="148" textAnchor="middle" fill="rgba(100,116,139,0.8)" fontSize="8" fontFamily="Inter">100%</text>
-          <text x="80"  y="18"  textAnchor="middle" fill="rgba(100,116,139,0.8)" fontSize="8" fontFamily="Inter">50%</text>
+          <text x="18" y="146" textAnchor="middle" fill="rgba(148,163,184,0.6)" fontSize="8" fontFamily="'JetBrains Mono'">0%</text>
+          <text x="142" y="146" textAnchor="middle" fill="rgba(148,163,184,0.6)" fontSize="8" fontFamily="'JetBrains Mono'">100%</text>
+          <text x="80"  y="20"  textAnchor="middle" fill="rgba(148,163,184,0.6)" fontSize="8" fontFamily="'JetBrains Mono'">50%</text>
         </svg>
       </div>
 
       {/* Threshold marker label */}
-      <p className="text-[11px] font-medium text-slate-500">
-        Threshold: <span className="text-red-400/80 font-semibold">80.00 %</span>
-        &nbsp;·&nbsp;
-        Margin:{" "}
-        <span className={cn("font-semibold", cfg.text)}>
-          {((clamped - 0.8) * 100).toFixed(2)} pp
-        </span>
-      </p>
+      <div className="flex items-center gap-2 text-[11px] font-mono px-3 py-1 rounded-full bg-slate-900/80 border border-white/[0.06] text-slate-400">
+        <span>Min: <span className="text-rose-400 font-semibold">80%</span></span>
+        <span className="text-slate-600">·</span>
+        <span>Margin: <span className={cn("font-bold", cfg.text)}>{((clamped - 0.8) * 100).toFixed(2)} pp</span></span>
+      </div>
     </div>
   );
 }

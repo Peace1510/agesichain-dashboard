@@ -29,10 +29,14 @@ import {
   Bell,
   Wifi,
   WifiOff,
+  Activity,
+  Table,
 } from "lucide-react";
 import { useSession } from "next-auth/react";
+import { cn } from "@/lib/utils";
 
 type ViewMode = "DASHBOARD" | "CREATE_SESSION" | "HISTORY";
+type AnalyticsTab = "CHARTS" | "KINETICS" | "LOGS";
 
 export default function ColdChainDashboardPage() {
   const { data: sessionData } = useSession();
@@ -60,6 +64,7 @@ export default function ColdChainDashboardPage() {
   // Session state
   const [activeSession, setActiveSession] = useState<ActiveSessionInfo | null>(null);
   const [viewMode, setViewMode] = useState<ViewMode>("DASHBOARD");
+  const [analyticsTab, setAnalyticsTab] = useState<AnalyticsTab>("CHARTS");
   const [isEndModalOpen, setIsEndModalOpen] = useState<boolean>(false);
 
   const isMountedRef = useRef(true);
@@ -264,48 +269,48 @@ export default function ColdChainDashboardPage() {
 
           {/* DEVICE DISCONNECTED BANNER */}
           {!isConnected && (
-            <div className="glass rounded-2xl p-5 border border-slate-700/60 bg-slate-900/60 flex items-start gap-4 animate-in fade-in duration-300">
-              <div className="h-10 w-10 rounded-xl bg-slate-800 border border-slate-700 flex items-center justify-center flex-shrink-0 text-slate-400">
-                <WifiOff className="h-6 w-6" />
+            <div className="glass rounded-xl px-4 py-3 border border-amber-500/30 bg-amber-950/20 flex flex-wrap items-center justify-between gap-3 text-xs animate-in fade-in duration-300">
+              <div className="flex items-center gap-2.5">
+                <span className="h-2 w-2 rounded-full bg-amber-400 animate-pulse flex-shrink-0" />
+                <span className="font-semibold text-amber-200">
+                  Waiting for ESP32 Telemetry:
+                </span>
+                <span className="text-slate-300">
+                  Power on your ESP32 kit and connect to mobile hotspot. Dashboard will stream automatically.
+                </span>
               </div>
-              <div>
-                <h3 className="text-sm font-bold text-slate-200 uppercase tracking-wider">
-                  Waiting for ESP32 Connection
-                </h3>
-                <p className="mt-1 text-xs text-slate-400 leading-relaxed">
-                  No telemetry received in the last 15 seconds. Ensure the ESP32 is powered on, connected to the hotspot, and transmitting data. Dashboard will stream automatically once readings arrive.
-                </p>
-                {pollError && (
-                  <p className="mt-2 text-xs text-red-400 mono">{pollError}</p>
-                )}
-              </div>
+              {pollError && (
+                <span className="text-rose-400 mono text-[11px] bg-rose-950/60 px-2 py-0.5 rounded border border-rose-800/40">
+                  {pollError}
+                </span>
+              )}
             </div>
           )}
 
           {/* BUZZER ALERT BANNER */}
           {buzzerActive && (
-            <div className="glass scan-line rounded-2xl p-5 border border-orange-500/60 bg-orange-950/40 flex items-start gap-4 glow-critical animate-in fade-in duration-300">
-              <div className="h-10 w-10 rounded-xl bg-orange-500/20 border border-orange-500/50 flex items-center justify-center flex-shrink-0 text-orange-400">
-                <Bell className="h-6 w-6 animate-bounce" />
-              </div>
-              <div className="flex-1">
-                <h3 className="text-sm font-bold text-orange-200 uppercase tracking-wider flex items-center gap-2">
-                  ⚠ BUZZER ACTIVE — TEMPERATURE EXCURSION / SPOILAGE HAZARD
-                </h3>
-                <p className="mt-1 text-xs text-orange-300/90 leading-relaxed">
-                  The physical ESP32 buzzer on GPIO 32 is actively buzzing! Chamber temperature is{" "}
-                  {currentTemp !== null ? currentTemp.toFixed(1) + "°C" : "—"} (allowed: {minAllowed}°C to {maxAllowed}°C). Current viability:{" "}
-                  {(currentViability * 100).toFixed(2)}% | TTS: {timeToSpoil !== null ? timeToSpoil.toFixed(1) + "h" : "—"}.
-                </p>
+            <div className="glass scan-line rounded-2xl p-4 sm:p-5 border border-rose-500/60 bg-rose-950/40 flex flex-wrap items-center justify-between gap-4 glow-critical animate-in fade-in duration-300 shadow-xl">
+              <div className="flex items-center gap-3.5">
+                <div className="h-9 w-9 rounded-xl bg-rose-500/20 border border-rose-500/50 flex items-center justify-center flex-shrink-0 text-rose-400">
+                  <Bell className="h-5 w-5 animate-bounce" />
+                </div>
+                <div>
+                  <h3 className="text-xs font-bold text-rose-200 uppercase tracking-wider flex items-center gap-1.5">
+                    <span>⚠ ALARM ACTIVE ON ESP32 (GPIO 32)</span>
+                  </h3>
+                  <p className="text-xs text-rose-300/90 mt-0.5">
+                    Chamber: <strong className="text-white">{currentTemp !== null ? currentTemp.toFixed(1) + "°C" : "—"}</strong> (Safe: {minAllowed}°C to {maxAllowed}°C) · Potency: <strong className="text-white">{(currentViability * 100).toFixed(2)}%</strong> · TTS: {timeToSpoil !== null ? timeToSpoil.toFixed(1) + "h" : "—"}
+                  </p>
+                </div>
               </div>
               {isAdmin && (
                 <button
                   onClick={() => handleBuzzerControl("silence")}
                   disabled={buzzerLoading}
-                  className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-orange-600 hover:bg-orange-500 border border-orange-400 text-white font-bold text-xs transition-all cursor-pointer disabled:opacity-50 shadow-lg shadow-orange-950/60 active:scale-95"
+                  className="flex items-center gap-2 px-4 py-2 rounded-xl bg-rose-600 hover:bg-rose-500 border border-rose-400 text-white font-bold text-xs transition-all cursor-pointer disabled:opacity-50 shadow-md shadow-rose-950/60 active:scale-95"
                 >
                   <BellOff className="h-4 w-4" />
-                  Silence Buzzer
+                  <span>Silence Buzzer</span>
                 </button>
               )}
             </div>
@@ -313,90 +318,64 @@ export default function ColdChainDashboardPage() {
 
           {/* CRITICAL / WARNING ALERT BANNERS */}
           {status === "CRITICAL" && isConnected && !buzzerActive && (
-            <div className="glass scan-line rounded-2xl p-5 border border-red-500/40 bg-red-950/30 flex items-start gap-4 glow-critical animate-in fade-in duration-300">
-              <div className="h-10 w-10 rounded-xl bg-red-500/20 border border-red-500/40 flex items-center justify-center flex-shrink-0 text-red-400">
-                <AlertOctagon className="h-6 w-6 animate-bounce" />
+            <div className="glass scan-line rounded-2xl p-4 border border-rose-500/40 bg-rose-950/25 flex items-center gap-3.5 glow-critical animate-in fade-in duration-300">
+              <div className="h-8 w-8 rounded-lg bg-rose-500/20 border border-rose-500/40 flex items-center justify-center flex-shrink-0 text-rose-400">
+                <AlertOctagon className="h-4 w-4" />
               </div>
-              <div>
-                <h3 className="text-sm font-bold text-red-200 uppercase tracking-wider">
+              <div className="text-xs">
+                <span className="font-bold text-rose-200 uppercase tracking-wider mr-2">
                   {currentViability <= 0.8
-                    ? "CRITICAL POTENCY BREACH — VACCINE SPOILED"
+                    ? "Critical Potency Breach:"
                     : timeToSpoil !== null && timeToSpoil <= etaHours
-                    ? "CRITICAL TRANSIT DEFICIT — SPOILAGE BEFORE DELIVERY"
-                    : currentTemp !== null && activeSession?.vaccineTier === "STANDARD_REFRIGERATED" && currentTemp <= 0.0
-                    ? `CRITICAL FREEZE EXCURSION (${currentTemp.toFixed(1)}°C) — DENATURATION HAZARD`
-                    : "CRITICAL COLD CHAIN ALERT"}
-                </h3>
-                <p className="mt-1 text-xs text-red-300/90 leading-relaxed">
-                  {currentViability <= 0.8 ? (
-                    <>
-                      Vaccine viability has dropped to <span className="font-semibold underline">{(currentViability * 100).toFixed(2)}%</span> (below 80% threshold). Molecular potency is irreversibly lost. Quarantine batch immediately.
-                    </>
-                  ) : timeToSpoil !== null && timeToSpoil <= etaHours ? (
-                    <>
-                      Remaining safe window ({timeToSpoil.toFixed(1)}h) is shorter than transit ETA ({etaHours.toFixed(1)}h). Product is projected to drop below 80% before arrival. Expedite transit or re-ice immediately.
-                    </>
-                  ) : currentTemp !== null && activeSession?.vaccineTier === "STANDARD_REFRIGERATED" && currentTemp <= 0.0 ? (
-                    <>
-                      Chamber temperature is at or below freezing (<span className="font-semibold">{currentTemp.toFixed(1)}°C</span>). Adjuvant crystallizes at ≤0°C. Immediate inspection required.
-                    </>
-                  ) : (
-                    <>
-                      Shipment is under critical thermal strain. Chamber temperature: {currentTemp !== null ? `${currentTemp.toFixed(1)}°C` : "—"}. Allowed: {minAllowed}°C to {maxAllowed}°C.
-                    </>
-                  )}
-                </p>
+                    ? "Critical Transit Deficit:"
+                    : "Thermal Excursion Alert:"}
+                </span>
+                <span className="text-rose-300/90">
+                  {currentViability <= 0.8
+                    ? "Vaccine viability dropped below 80% threshold. Denaturation occurred."
+                    : timeToSpoil !== null && timeToSpoil <= etaHours
+                    ? `Remaining safe window (${timeToSpoil.toFixed(1)}h) is shorter than transit ETA (${etaHours.toFixed(1)}h). Re-ice or expedite.`
+                    : `Chamber temperature is ${currentTemp !== null ? `${currentTemp.toFixed(1)}°C` : "—"} (Allowed: ${minAllowed}°C to ${maxAllowed}°C).`}
+                </span>
               </div>
             </div>
           )}
 
           {status === "WARNING" && isConnected && (
-            <div className="glass rounded-2xl p-5 border border-amber-500/40 bg-amber-950/30 flex items-start gap-4 glow-warning animate-in fade-in duration-300">
-              <div className="h-10 w-10 rounded-xl bg-amber-500/20 border border-amber-500/40 flex items-center justify-center flex-shrink-0 text-amber-400">
-                <AlertTriangle className="h-6 w-6" />
+            <div className="glass rounded-xl px-4 py-3 border border-amber-500/30 bg-amber-950/20 flex items-center gap-3.5 glow-warning animate-in fade-in duration-300">
+              <div className="h-7 w-7 rounded-lg bg-amber-500/20 border border-amber-500/30 flex items-center justify-center flex-shrink-0 text-amber-400">
+                <AlertTriangle className="h-4 w-4" />
               </div>
-              <div>
-                <h3 className="text-sm font-bold text-amber-200 uppercase tracking-wider">
-                  {currentTemp !== null && (currentTemp > maxAllowed || currentTemp < minAllowed)
-                    ? `THERMAL EXCURSION WARNING (${currentTemp.toFixed(1)}°C)`
-                    : "VIABILITY BUFFER WARNING"}
-                </h3>
-                <p className="mt-1 text-xs text-amber-300/90 leading-relaxed">
-                  {currentTemp !== null && (currentTemp > maxAllowed || currentTemp < minAllowed) ? (
-                    <>
-                      Ambient temperature is at <span className="font-semibold">{currentTemp.toFixed(1)}°C</span> (Tier allowed range: {minAllowed}°C to {maxAllowed}°C). Current viability is {(currentViability * 100).toFixed(2)}%.
-                    </>
-                  ) : (
-                    <>
-                      Remaining safe transit buffer is approaching the destination ETA ({etaHours.toFixed(1)}h). Current viability: {(currentViability * 100).toFixed(2)}%. Monitor shipment progress closely.
-                    </>
-                  )}
-                </p>
+              <div className="text-xs text-amber-300/90">
+                <strong className="font-semibold text-amber-200 uppercase tracking-wider mr-2">
+                  Thermal Advisory:
+                </strong>
+                Chamber is at {currentTemp !== null ? `${currentTemp.toFixed(1)}°C` : "—"} (Target: {minAllowed}°C–{maxAllowed}°C). Current potency: {(currentViability * 100).toFixed(2)}%.
               </div>
             </div>
           )}
 
           {/* HERO OVERVIEW: VIABILITY GAUGE + KPI CARDS */}
-          <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-stretch">
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-5 items-stretch">
             {/* Left: Viability Radial Gauge */}
-            <div className="lg:col-span-4 glass rounded-2xl p-6 flex flex-col items-center justify-between relative overflow-hidden">
-              <div className="w-full flex items-center justify-between border-b border-slate-800/80 pb-3">
+            <div className="lg:col-span-4 glass rounded-2xl p-5 sm:p-6 flex flex-col items-center justify-between relative overflow-hidden border border-white/[0.08] shadow-lg">
+              <div className="w-full flex items-center justify-between border-b border-white/[0.06] pb-3">
                 <span className="text-[11px] font-bold uppercase tracking-wider text-slate-400">
                   Kinetic Potency State
                 </span>
-                <span className="text-[10px] mono text-cyan-400 font-bold">
+                <span className="text-[10px] mono text-blue-400 font-bold bg-blue-950/60 border border-blue-800/40 px-2 py-0.5 rounded-full">
                   {activeSession?.sessionCode || "ACTIVE"}
                 </span>
               </div>
 
-              <div className="py-4 my-auto">
+              <div className="py-3 my-auto">
                 <ViabilityGauge viability={currentViability} status={status} />
               </div>
 
-              <div className="w-full pt-3 border-t border-slate-800/80 flex items-center justify-between text-[11px] text-slate-400">
+              <div className="w-full pt-3 border-t border-white/[0.06] flex items-center justify-between text-[11px] text-slate-400">
                 <span>Baseline: 100.00%</span>
                 <span className="mono">
-                  Status: <strong className={status === "CRITICAL" ? "text-red-400" : status === "WARNING" ? "text-amber-400" : "text-emerald-400"}>{status}</strong>
+                  Status: <strong className={status === "CRITICAL" ? "text-rose-400" : status === "WARNING" ? "text-amber-400" : "text-emerald-400"}>{status}</strong>
                 </span>
               </div>
             </div>
@@ -548,18 +527,80 @@ export default function ColdChainDashboardPage() {
             destinationMeta={meta}
           />
 
-          {/* REAL-TIME TELEMETRY CHARTS */}
-          <TelemetryCharts readings={readings} />
+          {/* DEEP TELEMETRY & ANALYTICS HUB (UNIFIED TABS) */}
+          <div className="glass rounded-2xl p-5 border border-white/[0.08] shadow-lg flex flex-col gap-4">
+            {/* Header & Segmented Tab Navigation */}
+            <div className="flex flex-wrap items-center justify-between gap-3 border-b border-white/[0.06] pb-3.5">
+              <div className="flex items-center gap-2.5">
+                <div className="h-8 w-8 rounded-lg bg-indigo-500/10 border border-indigo-500/25 flex items-center justify-center text-indigo-400">
+                  <Activity className="h-4 w-4" />
+                </div>
+                <div>
+                  <h2 className="text-sm font-bold text-slate-100 tracking-tight">
+                    Telemetry & Kinetic Analytics Hub
+                  </h2>
+                  <p className="text-[11px] text-slate-400">
+                    Switch between time-series curves, Arrhenius kinetics, and packet stream
+                  </p>
+                </div>
+              </div>
 
-          {/* KINETIC ENGINE MATHEMATICS */}
-          <KineticParametersCard
-            snapshot={snapshot}
-            currentTemp={currentTemp ?? (activeSession?.minTemp ? activeSession.minTemp + 2 : 4.0)}
-            etaHours={etaHours}
-          />
+              {/* Segmented Controller */}
+              <div className="flex items-center rounded-xl bg-slate-950/80 border border-white/[0.08] p-1 text-xs">
+                <button
+                  onClick={() => setAnalyticsTab("CHARTS")}
+                  className={cn(
+                    "flex items-center gap-1.5 px-3 py-1.5 rounded-lg font-semibold transition-all cursor-pointer text-xs",
+                    analyticsTab === "CHARTS"
+                      ? "bg-blue-600 text-white shadow-sm"
+                      : "text-slate-400 hover:text-slate-200"
+                  )}
+                >
+                  <TrendingDown className="h-3.5 w-3.5" />
+                  <span>Telemetry Visualizer</span>
+                </button>
 
-          {/* TELEMETRY LOG TABLE */}
-          <TelemetryTable readings={readings} />
+                <button
+                  onClick={() => setAnalyticsTab("KINETICS")}
+                  className={cn(
+                    "flex items-center gap-1.5 px-3 py-1.5 rounded-lg font-semibold transition-all cursor-pointer text-xs",
+                    analyticsTab === "KINETICS"
+                      ? "bg-blue-600 text-white shadow-sm"
+                      : "text-slate-400 hover:text-slate-200"
+                  )}
+                >
+                  <Gauge className="h-3.5 w-3.5" />
+                  <span>Kinetic Engine</span>
+                </button>
+
+                <button
+                  onClick={() => setAnalyticsTab("LOGS")}
+                  className={cn(
+                    "flex items-center gap-1.5 px-3 py-1.5 rounded-lg font-semibold transition-all cursor-pointer text-xs",
+                    analyticsTab === "LOGS"
+                      ? "bg-blue-600 text-white shadow-sm"
+                      : "text-slate-400 hover:text-slate-200"
+                  )}
+                >
+                  <Table className="h-3.5 w-3.5" />
+                  <span>Packet Logs ({readings.length})</span>
+                </button>
+              </div>
+            </div>
+
+            {/* Active Tab Panel */}
+            <div className="pt-1">
+              {analyticsTab === "CHARTS" && <TelemetryCharts readings={readings} />}
+              {analyticsTab === "KINETICS" && (
+                <KineticParametersCard
+                  snapshot={snapshot}
+                  currentTemp={currentTemp ?? (activeSession?.minTemp ? activeSession.minTemp + 2 : 4.0)}
+                  etaHours={etaHours}
+                />
+              )}
+              {analyticsTab === "LOGS" && <TelemetryTable readings={readings} />}
+            </div>
+          </div>
 
           {/* MODAL: END SESSION */}
           {activeSession && (

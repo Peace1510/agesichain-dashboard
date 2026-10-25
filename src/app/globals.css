@@ -1,23 +1,24 @@
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600&display=swap');
 @import "tailwindcss";
 
-/* ─── Design tokens ────────────────────────────────────────────────────────── */
+/* ─── Design tokens (Modern Medical IoT Theme) ───────────────────────── */
 :root {
-  --bg-base:        #04070f;
-  --bg-surface:     rgba(255,255,255,0.035);
-  --bg-surface-hov: rgba(255,255,255,0.065);
-  --border:         rgba(255,255,255,0.08);
-  --border-glow:    rgba(6,182,212,0.35);
+  --bg-base:        #090d16;
+  --bg-surface:     rgba(15, 23, 42, 0.65);
+  --bg-surface-hov: rgba(30, 41, 59, 0.75);
+  --border:         rgba(255, 255, 255, 0.08);
+  --border-hover:   rgba(255, 255, 255, 0.16);
+  --border-glow:    rgba(59, 130, 246, 0.35);
 
   --nominal:  #10b981;
   --warning:  #f59e0b;
-  --critical: #ef4444;
-  --accent:   #06b6d4;
-  --accent2:  #8b5cf6;
+  --critical: #f43f5e;
+  --accent:   #3b82f6;
+  --accent2:  #6366f1;
 
-  --text-primary:   #f1f5f9;
+  --text-primary:   #f8fafc;
   --text-secondary: #94a3b8;
-  --text-muted:     #475569;
+  --text-muted:     #64748b;
 }
 
 @theme inline {
@@ -38,25 +39,27 @@ body {
   font-family: 'Inter', system-ui, sans-serif;
   min-height: 100vh;
   overflow-x: hidden;
-  /* Subtle grid texture */
+  /* Soft, deep ambient lighting */
   background-image:
-    radial-gradient(ellipse 80% 50% at 50% -20%, rgba(6,182,212,0.12) 0%, transparent 60%),
-    linear-gradient(rgba(255,255,255,0.015) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(255,255,255,0.015) 1px, transparent 1px);
-  background-size: 100% 100%, 40px 40px, 40px 40px;
+    radial-gradient(ellipse 70% 40% at 50% 0%, rgba(59, 130, 246, 0.09) 0%, transparent 60%),
+    radial-gradient(ellipse 60% 40% at 85% 90%, rgba(99, 102, 241, 0.05) 0%, transparent 60%),
+    linear-gradient(rgba(255, 255, 255, 0.012) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255, 255, 255, 0.012) 1px, transparent 1px);
+  background-size: 100% 100%, 100% 100%, 36px 36px, 36px 36px;
 }
 
 /* ─── Glass card ───────────────────────────────────────────────────────────── */
 .glass {
   background: var(--bg-surface);
   border: 1px solid var(--border);
-  backdrop-filter: blur(16px) saturate(180%);
-  -webkit-backdrop-filter: blur(16px) saturate(180%);
+  backdrop-filter: blur(20px) saturate(180%);
+  -webkit-backdrop-filter: blur(20px) saturate(180%);
+  box-shadow: 0 4px 20px -2px rgba(0, 0, 0, 0.35);
 }
 
 .glass:hover {
   background: var(--bg-surface-hov);
-  border-color: rgba(255,255,255,0.12);
+  border-color: var(--border-hover);
 }
 
 /* ─── Glow rings ───────────────────────────────────────────────────────────── */

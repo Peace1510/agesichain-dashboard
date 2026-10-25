@@ -233,28 +233,28 @@ export default function DestinationConfigCard({
   };
 
   return (
-    <div className="glass rounded-2xl p-5 border border-slate-800/80 bg-slate-900/40 relative overflow-hidden flex flex-col justify-between">
-      {/* Top accent */}
-      <div className="absolute inset-x-0 top-0 h-1 bg-gradient-to-r from-emerald-500 via-cyan-400 to-blue-500" />
+    <div className="glass rounded-2xl p-5 border border-white/[0.08] shadow-lg relative overflow-hidden flex flex-col justify-between">
+      {/* Top accent line */}
+      <div className="absolute inset-x-0 top-0 h-[2px] bg-gradient-to-r from-emerald-500 via-blue-500 to-indigo-500" />
 
       {/* Header */}
       <div>
-        <div className="flex items-center justify-between pb-3 border-b border-slate-800/80">
+        <div className="flex items-center justify-between pb-3.5 border-b border-white/[0.06]">
           <div className="flex items-center gap-2.5">
-            <div className="h-9 w-9 rounded-xl bg-emerald-500/10 border border-emerald-500/30 flex items-center justify-center text-emerald-400">
-              <Truck className="h-5 w-5" />
+            <div className="h-8 w-8 rounded-lg bg-emerald-500/10 border border-emerald-500/25 flex items-center justify-center text-emerald-400">
+              <Truck className="h-4 w-4" />
             </div>
             <div>
               <h3 className="text-sm font-bold text-slate-100 flex items-center gap-2">
-                Shipment Destination & Route Planner
+                Destination & Route Planner
                 {savedSuccess && (
-                  <span className="text-[10px] font-mono text-emerald-400 bg-emerald-950/80 border border-emerald-800 px-2 py-0.5 rounded-full flex items-center gap-1 animate-in fade-in">
+                  <span className="text-[10px] font-mono text-emerald-300 bg-emerald-950/80 border border-emerald-800/60 px-2 py-0.5 rounded-full flex items-center gap-1 animate-in fade-in">
                     <CheckCircle className="h-3 w-3" /> Saved!
                   </span>
                 )}
               </h3>
               <p className="text-[11px] text-slate-400">
-                Google Maps-style place search & Real-Time Road Traffic ETA
+                Place search & Real-Time Road Traffic ETA
               </p>
             </div>
           </div>
@@ -262,13 +262,13 @@ export default function DestinationConfigCard({
           {isAdmin ? (
             <button
               onClick={() => setIsEditing(!isEditing)}
-              className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 border border-slate-700 text-xs text-slate-300 hover:text-cyan-300 font-medium transition-all cursor-pointer"
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-slate-900/80 hover:bg-slate-800 border border-white/[0.08] hover:border-white/[0.16] text-xs text-slate-300 hover:text-white font-medium transition-all cursor-pointer shadow-sm active:scale-95"
             >
-              <Sliders className="h-3.5 w-3.5 text-cyan-400" />
+              <Sliders className="h-3.5 w-3.5 text-blue-400" />
               <span>{isEditing ? "Cancel" : "Configure & Search"}</span>
             </button>
           ) : (
-            <span className="text-[10px] font-mono text-slate-400 bg-slate-800/60 border border-slate-700/60 px-2 py-1 rounded-lg">
+            <span className="text-[10px] font-mono text-slate-400 bg-slate-900/80 border border-white/[0.06] px-2.5 py-1 rounded-full">
               Transit Monitor
             </span>
           )}
@@ -276,13 +276,13 @@ export default function DestinationConfigCard({
 
         {/* View Mode or Edit Form */}
         {!isEditing ? (
-          <div className="mt-4 flex flex-col gap-3">
+          <div className="mt-3.5 flex flex-col gap-3">
             {/* Route Summary Row */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-2.5">
               {/* Origin */}
-              <div className="p-3 rounded-xl bg-slate-950/60 border border-slate-800/80">
-                <span className="text-[10px] uppercase font-bold text-slate-500 flex items-center gap-1">
-                  <MapPin className="h-3 w-3 text-cyan-400" /> Origin Point
+              <div className="p-3 rounded-xl bg-slate-900/50 border border-white/[0.06]">
+                <span className="text-[10px] uppercase font-bold text-slate-400 flex items-center gap-1">
+                  <MapPin className="h-3 w-3 text-blue-400" /> Origin
                 </span>
                 <p className="mt-1 text-xs font-semibold text-slate-200 truncate">
                   {meta.origin !== "—" ? meta.origin : "Not specified"}
@@ -290,9 +290,9 @@ export default function DestinationConfigCard({
               </div>
 
               {/* Destination */}
-              <div className="p-3 rounded-xl bg-slate-950/60 border border-slate-800/80">
-                <span className="text-[10px] uppercase font-bold text-slate-500 flex items-center gap-1">
-                  <Truck className="h-3 w-3 text-emerald-400" /> Target Destination
+              <div className="p-3 rounded-xl bg-slate-900/50 border border-white/[0.06]">
+                <span className="text-[10px] uppercase font-bold text-slate-400 flex items-center gap-1">
+                  <Truck className="h-3 w-3 text-emerald-400" /> Destination
                 </span>
                 <p className="mt-1 text-xs font-semibold text-emerald-300 truncate">
                   {meta.destination !== "—" ? meta.destination : "Click Configure to set"}
@@ -300,9 +300,9 @@ export default function DestinationConfigCard({
               </div>
 
               {/* Transit ETA */}
-              <div className="p-3 rounded-xl bg-slate-950/60 border border-slate-800/80">
-                <span className="text-[10px] uppercase font-bold text-slate-500 flex items-center gap-1">
-                  <Clock className="h-3 w-3 text-amber-400" /> Live Road ETA
+              <div className="p-3 rounded-xl bg-slate-900/50 border border-white/[0.06]">
+                <span className="text-[10px] uppercase font-bold text-slate-400 flex items-center gap-1">
+                  <Clock className="h-3 w-3 text-amber-400" /> Road ETA
                 </span>
                 <p className="mt-1 text-xs font-mono font-bold text-amber-300 flex items-center gap-1.5">
                   <span>
@@ -320,24 +320,19 @@ export default function DestinationConfigCard({
             </div>
 
             {/* Kinetic Explanation Banner */}
-            <div className="p-3 rounded-xl bg-cyan-950/20 border border-cyan-800/40 text-xs text-slate-300 flex items-start gap-2.5">
-              <Info className="h-4 w-4 text-cyan-400 flex-shrink-0 mt-0.5" />
-              <div className="leading-relaxed">
-                <span className="font-semibold text-cyan-200">
-                  Real-Time Viability Buffer:
+            <div className="p-2.5 rounded-xl bg-blue-950/20 border border-blue-800/30 text-[11px] text-slate-300 flex items-center gap-2">
+              <Info className="h-3.5 w-3.5 text-blue-400 flex-shrink-0" />
+              <div className="leading-tight truncate">
+                <span className="font-semibold text-blue-200">
+                  Viability Buffer:
                 </span>{" "}
                 <span className="text-slate-300">
-                  Chemical shelf-life ({timeToSpoil !== null ? timeToSpoil.toFixed(1) + " hrs" : "calculating..."}) vs. Driving ETA ({etaHours.toFixed(1)} hrs). Buffer:{" "}
-                  <code className="text-cyan-300 mono bg-slate-900 px-1 py-0.5 rounded">
-                    TTS - ETA = {bufferHours !== null ? (bufferHours > 0 ? "+" + bufferHours.toFixed(1) : bufferHours.toFixed(1)) + " hrs" : "—"}
-                  </code>.{" "}
-                  {bufferHours !== null && (
-                    <strong className={isBufferSafe ? "text-emerald-400" : "text-red-400"}>
-                      {isBufferSafe
-                        ? "Shipment will arrive with safe potency buffer remaining."
-                        : "WARNING: Shipment will spoil before reaching destination!"}
+                  Shelf-life ({timeToSpoil !== null ? timeToSpoil.toFixed(1) + "h" : "calc..."}) vs. ETA ({etaHours.toFixed(1)}h). Buffer:{" "}
+                  {timeToSpoil !== null ? (
+                    <strong className={timeToSpoil - etaHours > 1 ? "text-emerald-300" : timeToSpoil - etaHours > 0 ? "text-amber-300" : "text-rose-400"}>
+                      {(timeToSpoil - etaHours).toFixed(1)}h surplus
                     </strong>
-                  )}
+                  ) : "—"}
                 </span>
               </div>
             </div>

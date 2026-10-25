@@ -157,83 +157,72 @@ export default function CreateSessionView({
   const activeTierConfig: VaccineTierConfig = VACCINE_TIERS[selectedTier];
 
   return (
-    <div className="w-full max-w-5xl mx-auto space-y-8 animate-in fade-in duration-300">
+    <div className="w-full max-w-5xl mx-auto space-y-6 animate-in fade-in duration-300">
       {/* Top Banner & Navigation */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 p-6 glass rounded-3xl border border-white/10">
-        <div className="flex items-center gap-4">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 p-5 glass rounded-2xl border border-white/[0.08] shadow-lg">
+        <div className="flex items-center gap-3.5">
           {onBack && (
             <button
               type="button"
               onClick={onBack}
               title="Return to Dashboard"
-              className="p-3 rounded-2xl bg-slate-900/90 hover:bg-slate-800 border border-slate-700/80 hover:border-cyan-500/50 text-slate-300 hover:text-cyan-300 transition-all cursor-pointer group flex-shrink-0"
+              className="p-2.5 rounded-xl bg-slate-900/90 hover:bg-slate-800 border border-white/[0.08] hover:border-blue-500/40 text-slate-300 hover:text-white transition-all cursor-pointer group flex-shrink-0"
             >
-              <ArrowLeft className="h-5 w-5 group-hover:-translate-x-0.5 transition-transform" />
+              <ArrowLeft className="h-4 w-4 group-hover:-translate-x-0.5 transition-transform" />
             </button>
           )}
-          <div className="h-12 w-12 rounded-2xl bg-cyan-500/10 border border-cyan-500/30 flex items-center justify-center text-cyan-400 glow-accent flex-shrink-0">
-            <ThermometerSnowflake className="h-6 w-6" />
+          <div className="h-10 w-10 rounded-xl bg-blue-500/10 border border-blue-500/20 flex items-center justify-center text-blue-400 flex-shrink-0">
+            <ThermometerSnowflake className="h-5 w-5" />
           </div>
           <div>
-            <div className="inline-flex items-center gap-2 px-2.5 py-0.5 rounded-full bg-cyan-950/60 border border-cyan-800/50 text-[10px] font-mono uppercase font-bold text-cyan-300 mb-1">
-              Fleet Command Ready
+            <div className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-md bg-blue-950/40 border border-blue-500/25 text-[10px] font-mono uppercase font-bold text-blue-300 mb-0.5">
+              Transit Configuration
             </div>
-            <h1 className="text-xl sm:text-2xl font-black text-white tracking-tight">
+            <h1 className="text-lg sm:text-xl font-bold text-white tracking-tight">
               Launch Cold-Chain Transit Session
             </h1>
-            <p className="text-xs text-slate-400 mt-0.5">
+            <p className="text-xs text-slate-400">
               Select vaccine classification tier, configure thermal tolerances, and initialize IoT telemetry.
             </p>
           </div>
         </div>
 
         <div className="flex items-center gap-2 flex-shrink-0">
-          {onBack && (
-            <button
-              type="button"
-              onClick={onBack}
-              className="inline-flex items-center gap-2 px-3.5 py-2.5 rounded-xl bg-slate-900/90 hover:bg-slate-800 border border-slate-700/80 hover:border-slate-600 text-slate-300 text-xs font-semibold shadow-md transition-all cursor-pointer group"
-            >
-              <ArrowLeft className="h-4 w-4 text-cyan-400 group-hover:-translate-x-0.5 transition-transform" />
-              <span>Back to Dashboard</span>
-            </button>
-          )}
           <button
             type="button"
             onClick={onOpenHistory}
-            className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-slate-900/90 hover:bg-slate-800 border border-slate-700/80 hover:border-cyan-500/50 text-slate-200 text-xs font-semibold shadow-md transition-all cursor-pointer group flex-shrink-0"
+            className="inline-flex items-center gap-2 px-3.5 py-2 rounded-xl bg-slate-900/90 hover:bg-slate-800 border border-white/[0.08] hover:border-blue-500/40 text-slate-200 text-xs font-semibold shadow transition-all cursor-pointer group flex-shrink-0"
           >
-            <History className="h-4 w-4 text-cyan-400 group-hover:rotate-[-20deg] transition-transform" />
-            <span>View Session History & Audits</span>
+            <History className="h-4 w-4 text-blue-400 group-hover:rotate-[-20deg] transition-transform" />
+            <span>Session History & Audits</span>
           </button>
         </div>
       </div>
 
-
       {error && (
-        <div className="p-4 rounded-2xl bg-red-950/40 border border-red-500/40 text-red-300 text-xs flex items-center gap-3">
-          <AlertCircle className="h-5 w-5 text-red-400 flex-shrink-0" />
+        <div className="p-4 rounded-xl bg-rose-950/40 border border-rose-500/40 text-rose-300 text-xs flex items-center gap-3">
+          <AlertCircle className="h-4 w-4 text-rose-400 flex-shrink-0" />
           <span>{error}</span>
         </div>
       )}
 
-      {/* Main Configuration Card */}
-      <form onSubmit={handleSubmit} className="glass rounded-3xl p-6 sm:p-8 border border-white/10 shadow-2xl space-y-8">
+      {/* Main Configuration Form */}
+      <form onSubmit={handleSubmit} className="space-y-6">
         {/* SECTION 1: Vaccine Classification Tier Selector */}
-        <div>
-          <div className="flex items-center justify-between mb-4">
+        <div className="glass rounded-2xl p-5 sm:p-6 border border-white/[0.08] shadow-lg space-y-4">
+          <div className="flex items-center justify-between border-b border-white/[0.06] pb-3">
             <div>
-              <label className="text-xs font-mono uppercase tracking-wider font-bold text-slate-200 flex items-center gap-2">
-                <Layers className="h-4 w-4 text-cyan-400" />
+              <label className="text-xs font-bold text-slate-200 uppercase tracking-wider flex items-center gap-2">
+                <Layers className="h-4 w-4 text-blue-400" />
                 1. Select Vaccine Temperature Classification Tier
               </label>
               <p className="text-[11px] text-slate-400 mt-0.5">
-                Each tier enforces international WHO / CDC temperature thresholds and Arrhenius degradation parameters.
+                Calibrates WHO / CDC thermal tolerance envelope and Arrhenius rate kinetics.
               </p>
             </div>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-3.5">
             {(Object.keys(VACCINE_TIERS) as VaccineTierType[]).map((tierKey) => {
               const tier = VACCINE_TIERS[tierKey];
               const isSelected = selectedTier === tierKey;
@@ -241,43 +230,42 @@ export default function CreateSessionView({
                 <div
                   key={tierKey}
                   onClick={() => handleSelectTier(tierKey)}
-                  className={`p-5 rounded-2xl border transition-all cursor-pointer relative overflow-hidden flex flex-col justify-between ${
+                  className={`p-4 rounded-xl border transition-all cursor-pointer relative overflow-hidden flex flex-col justify-between ${
                     isSelected
-                      ? `bg-slate-900/90 border-cyan-400 glow-accent ring-1 ring-cyan-400/50`
-                      : `bg-slate-950/40 border-slate-800/80 hover:border-slate-700 hover:bg-slate-900/40`
+                      ? `bg-blue-950/30 border-blue-500/60 shadow-md ring-1 ring-blue-500/30`
+                      : `bg-slate-900/40 border-white/[0.06] hover:border-white/[0.15] hover:bg-slate-900/60`
                   }`}
                 >
-                  {/* Top Header */}
                   <div>
                     <div className="flex items-center justify-between mb-2">
-                      <span className={`text-[10px] font-mono font-bold px-2 py-0.5 rounded-full ${
+                      <span className={`text-[10px] font-mono font-bold px-2 py-0.5 rounded-md ${
                         tierKey === "STANDARD_REFRIGERATED"
-                          ? "bg-cyan-950/90 text-cyan-300 border border-cyan-800/60"
+                          ? "bg-emerald-950/70 text-emerald-300 border border-emerald-500/30"
                           : tierKey === "FROZEN"
-                          ? "bg-blue-950/90 text-blue-300 border border-blue-800/60"
-                          : "bg-purple-950/90 text-purple-300 border border-purple-800/60"
+                          ? "bg-blue-950/70 text-blue-300 border border-blue-500/30"
+                          : "bg-purple-950/70 text-purple-300 border border-purple-500/30"
                       }`}>
                         {tier.badge}
                       </span>
                       {isSelected && (
-                        <CheckCircle2 className="h-4 w-4 text-cyan-400" />
+                        <CheckCircle2 className="h-4 w-4 text-blue-400" />
                       )}
                     </div>
 
-                    <h3 className="text-sm font-bold text-white mb-1.5">
+                    <h3 className="text-sm font-bold text-white mb-1">
                       {tier.name}
                     </h3>
-                    <p className="text-[11px] text-slate-400 leading-relaxed mb-3">
+                    <p className="text-[11px] text-slate-400 leading-relaxed mb-3 line-clamp-2">
                       {tier.description}
                     </p>
                   </div>
 
                   {/* Examples footer */}
-                  <div className="pt-3 border-t border-slate-800/80">
-                    <span className="text-[10px] font-mono text-slate-500 uppercase block mb-1">
-                      Common Payloads:
+                  <div className="pt-2.5 border-t border-white/[0.04]">
+                    <span className="text-[10px] font-mono text-slate-400 uppercase block mb-0.5">
+                      Examples:
                     </span>
-                    <p className="text-[10px] text-slate-300 line-clamp-2">
+                    <p className="text-[10px] text-slate-300 line-clamp-1">
                       {tier.examples.join(", ")}
                     </p>
                   </div>
@@ -287,16 +275,67 @@ export default function CreateSessionView({
           </div>
         </div>
 
-        {/* SECTION 2: Payload & Route Details */}
-        <div>
-          <label className="text-xs font-mono uppercase tracking-wider font-bold text-slate-200 flex items-center gap-2 mb-4">
-            <Box className="h-4 w-4 text-emerald-400" />
-            2. Shipment Payload & Transport Hardware Details
-          </label>
+        {/* SECTION 2: Payload & Hardware Specifications */}
+        <div className="glass rounded-2xl p-5 sm:p-6 border border-white/[0.08] shadow-lg space-y-4">
+          <div className="flex items-center justify-between border-b border-white/[0.06] pb-3">
+            <div>
+              <label className="text-xs font-bold text-slate-200 uppercase tracking-wider flex items-center gap-2">
+                <Box className="h-4 w-4 text-emerald-400" />
+                2. Shipment Payload & Transport Hardware Details
+              </label>
+              <p className="text-[11px] text-slate-400 mt-0.5">
+                Configure vaccine batch details, container hardware, and thermal limits.
+              </p>
+            </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
+            {/* Quick Presets Dropdown / Pills */}
+            <div className="hidden sm:flex items-center gap-1.5">
+              <span className="text-[10px] font-mono text-slate-400 mr-1">PRESETS:</span>
+              <button
+                type="button"
+                onClick={() =>
+                  handleApplyPreset(
+                    "DPT Inactivated Vaccine",
+                    "STANDARD_REFRIGERATED",
+                    "Ice-lined refrigerator (ILR) van"
+                  )
+                }
+                className="px-2 py-1 rounded bg-slate-800/80 hover:bg-slate-700 border border-white/[0.06] text-[10px] text-slate-300 transition-colors cursor-pointer"
+              >
+                +2..+8°C DPT
+              </button>
+              <button
+                type="button"
+                onClick={() =>
+                  handleApplyPreset(
+                    "Oral Polio Vaccine (OPV)",
+                    "FROZEN",
+                    "Deep freezer transport vehicle (-20°C)"
+                  )
+                }
+                className="px-2 py-1 rounded bg-slate-800/80 hover:bg-slate-700 border border-white/[0.06] text-[10px] text-slate-300 transition-colors cursor-pointer"
+              >
+                -20°C OPV
+              </button>
+              <button
+                type="button"
+                onClick={() =>
+                  handleApplyPreset(
+                    "Pfizer-BioNTech Comirnaty mRNA",
+                    "ULTRA_COLD",
+                    "Specialized thermal shipper with dry ice (UN1845)"
+                  )
+                }
+                className="px-2 py-1 rounded bg-slate-800/80 hover:bg-slate-700 border border-white/[0.06] text-[10px] text-slate-300 transition-colors cursor-pointer"
+              >
+                -80°C mRNA
+              </button>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
             {/* Vaccine Name */}
-            <div className="space-y-1.5">
+            <div className="space-y-1">
               <label className="text-xs font-semibold text-slate-300">
                 Vaccine / Medicine Name *
               </label>
@@ -305,13 +344,13 @@ export default function CreateSessionView({
                 required
                 value={vaccineName}
                 onChange={(e) => setVaccineName(e.target.value)}
-                placeholder="e.g. DPT Vaccine, Oral Polio (OPV)"
-                className="w-full px-3.5 py-2.5 bg-slate-900/80 border border-slate-700/80 rounded-xl text-sm text-slate-100 placeholder-slate-500 focus:outline-none focus:border-cyan-400"
+                placeholder="e.g. DPT Inactivated Vaccine"
+                className="w-full px-3 py-2 bg-slate-900/80 border border-white/[0.08] rounded-xl text-xs sm:text-sm text-slate-100 placeholder-slate-500 focus:outline-none focus:border-blue-500 transition-colors"
               />
             </div>
 
             {/* Batch / Lot Number */}
-            <div className="space-y-1.5">
+            <div className="space-y-1">
               <label className="text-xs font-semibold text-slate-300">
                 Batch / Lot Number
               </label>
@@ -320,19 +359,19 @@ export default function CreateSessionView({
                 value={batchNumber}
                 onChange={(e) => setBatchNumber(e.target.value)}
                 placeholder="BAT-2026-902A"
-                className="w-full px-3.5 py-2.5 bg-slate-900/80 border border-slate-700/80 rounded-xl text-sm text-slate-100 placeholder-slate-500 font-mono focus:outline-none focus:border-cyan-400"
+                className="w-full px-3 py-2 bg-slate-900/80 border border-white/[0.08] rounded-xl text-xs sm:text-sm text-slate-100 placeholder-slate-500 font-mono focus:outline-none focus:border-blue-500 transition-colors"
               />
             </div>
 
             {/* Transport Equipment */}
-            <div className="space-y-1.5">
+            <div className="space-y-1">
               <label className="text-xs font-semibold text-slate-300">
                 Transport Equipment
               </label>
               <select
                 value={transportEquip}
                 onChange={(e) => setTransportEquip(e.target.value)}
-                className="w-full px-3.5 py-2.5 bg-slate-900/80 border border-slate-700/80 rounded-xl text-sm text-slate-100 focus:outline-none focus:border-cyan-400 cursor-pointer"
+                className="w-full px-3 py-2 bg-slate-900/80 border border-white/[0.08] rounded-xl text-xs sm:text-sm text-slate-100 focus:outline-none focus:border-blue-500 cursor-pointer transition-colors"
               >
                 {activeTierConfig.equipmentOptions.map((eq) => (
                   <option key={eq} value={eq} className="bg-slate-900 text-slate-100">
@@ -343,10 +382,10 @@ export default function CreateSessionView({
             </div>
 
             {/* Minimum Allowed Temp */}
-            <div className="space-y-1.5">
+            <div className="space-y-1">
               <label className="text-xs font-semibold text-slate-300 flex items-center justify-between">
                 <span>Min Allowed Temp (°C)</span>
-                <span className="text-[10px] text-cyan-400 font-mono">Tier Recommended: {activeTierConfig.minTemp}°C</span>
+                <span className="text-[10px] text-blue-400 font-mono">Rec: {activeTierConfig.minTemp}°C</span>
               </label>
               <input
                 type="number"
@@ -354,15 +393,15 @@ export default function CreateSessionView({
                 required
                 value={minTemp}
                 onChange={(e) => setMinTemp(parseFloat(e.target.value) || 0)}
-                className="w-full px-3.5 py-2.5 bg-slate-900/80 border border-slate-700/80 rounded-xl text-sm text-slate-100 font-mono focus:outline-none focus:border-cyan-400"
+                className="w-full px-3 py-2 bg-slate-900/80 border border-white/[0.08] rounded-xl text-xs sm:text-sm text-slate-100 font-mono focus:outline-none focus:border-blue-500 transition-colors"
               />
             </div>
 
             {/* Maximum Allowed Temp */}
-            <div className="space-y-1.5">
+            <div className="space-y-1">
               <label className="text-xs font-semibold text-slate-300 flex items-center justify-between">
                 <span>Max Allowed Temp (°C)</span>
-                <span className="text-[10px] text-cyan-400 font-mono">Tier Recommended: {activeTierConfig.maxTemp}°C</span>
+                <span className="text-[10px] text-blue-400 font-mono">Rec: {activeTierConfig.maxTemp}°C</span>
               </label>
               <input
                 type="number"
@@ -370,22 +409,22 @@ export default function CreateSessionView({
                 required
                 value={maxTemp}
                 onChange={(e) => setMaxTemp(parseFloat(e.target.value) || 0)}
-                className="w-full px-3.5 py-2.5 bg-slate-900/80 border border-slate-700/80 rounded-xl text-sm text-slate-100 font-mono focus:outline-none focus:border-cyan-400"
+                className="w-full px-3 py-2 bg-slate-900/80 border border-white/[0.08] rounded-xl text-xs sm:text-sm text-slate-100 font-mono focus:outline-none focus:border-blue-500 transition-colors"
               />
             </div>
 
             {/* ETA in Hours — auto-calculated */}
-            <div className="space-y-1.5">
+            <div className="space-y-1">
               <label className="text-xs font-semibold text-slate-300 flex items-center justify-between">
                 <span className="flex items-center gap-1">
-                  <Clock className="h-3 w-3 text-cyan-400" />
+                  <Clock className="h-3 w-3 text-blue-400" />
                   Transit ETA (Hours)
                 </span>
                 {(originCoords && destCoords) && (
                   <button
                     type="button"
                     onClick={() => originCoords && destCoords && calculateEta(originCoords, destCoords)}
-                    className="text-[10px] text-cyan-400 hover:text-cyan-300 flex items-center gap-0.5 transition-colors"
+                    className="text-[10px] text-blue-400 hover:text-blue-300 flex items-center gap-0.5 transition-colors cursor-pointer"
                   >
                     <RefreshCw className="h-2.5 w-2.5" />
                     Recalculate
@@ -401,33 +440,46 @@ export default function CreateSessionView({
                   required
                   value={etaHours}
                   onChange={(e) => setEtaHours(parseFloat(e.target.value) || 0.1)}
-
-                  className={`w-full px-3.5 py-2.5 pr-10 bg-slate-900/80 border rounded-xl text-sm text-slate-100 font-mono focus:outline-none transition-colors ${
+                  className={`w-full px-3 py-2 pr-9 bg-slate-900/80 border rounded-xl text-xs sm:text-sm text-slate-100 font-mono focus:outline-none transition-colors ${
                     etaLoading
-                      ? "border-cyan-500/60 animate-pulse"
-                      : "border-slate-700/80 focus:border-cyan-400"
+                      ? "border-blue-500/60 animate-pulse"
+                      : "border-white/[0.08] focus:border-blue-500"
                   }`}
                 />
                 {etaLoading ? (
-                  <Navigation className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-cyan-400 animate-spin" />
+                  <Navigation className="absolute right-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-blue-400 animate-spin" />
                 ) : (
-                  <Navigation className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-600" />
+                  <Navigation className="absolute right-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-slate-500" />
                 )}
               </div>
-              {etaDistKm && (
+              {etaDistKm ? (
                 <p className="text-[10px] text-emerald-400 font-mono">
-                  ≈ {etaDistKm} km road distance · auto-calculated via Ola Maps
+                  ≈ {etaDistKm} km road distance (Ola Maps)
                 </p>
-              )}
-              {!etaDistKm && (
+              ) : (
                 <p className="text-[10px] text-slate-500">
-                  Select origin &amp; destination to auto-calculate.
+                  Select route below to auto-calculate
                 </p>
               )}
             </div>
+          </div>
+        </div>
 
+        {/* SECTION 3: Route Waypoints */}
+        <div className="glass rounded-2xl p-5 sm:p-6 border border-white/[0.08] shadow-lg space-y-4">
+          <div className="border-b border-white/[0.06] pb-3">
+            <label className="text-xs font-bold text-slate-200 uppercase tracking-wider flex items-center gap-2">
+              <Truck className="h-4 w-4 text-cyan-400" />
+              3. Route &amp; Transit Waypoints
+            </label>
+            <p className="text-[11px] text-slate-400 mt-0.5">
+              Specify origin depot and destination facility for route tracking and ETA projection.
+            </p>
+          </div>
+
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
             {/* Origin Location */}
-            <div className="space-y-1.5 sm:col-span-2 lg:col-span-1">
+            <div className="space-y-1">
               <PlaceAutocompleteInput
                 id="session-origin"
                 label="Origin Facility"
@@ -441,7 +493,7 @@ export default function CreateSessionView({
             </div>
 
             {/* Destination Location */}
-            <div className="space-y-1.5 sm:col-span-2 lg:col-span-2">
+            <div className="space-y-1">
               <PlaceAutocompleteInput
                 id="session-destination"
                 label="Destination Hospital / Clinic"
@@ -456,69 +508,21 @@ export default function CreateSessionView({
           </div>
         </div>
 
-        {/* Quick Presets Bar */}
-        <div className="pt-2">
-          <span className="text-[11px] font-mono text-slate-400 block mb-2">
-            QUICK PRESETS:
-          </span>
-          <div className="flex flex-wrap items-center gap-2">
-            <button
-              type="button"
-              onClick={() =>
-                handleApplyPreset(
-                  "DPT / Pentavalent Vaccine",
-                  "STANDARD_REFRIGERATED",
-                  "Ice-lined refrigerator (ILR) van"
-                )
-              }
-              className="px-3 py-1.5 rounded-lg bg-slate-900/70 hover:bg-cyan-950/40 border border-slate-800 hover:border-cyan-700/50 text-xs text-slate-300 hover:text-cyan-300 transition-colors cursor-pointer"
-            >
-              +2°C to +8°C Standard DPT
-            </button>
-            <button
-              type="button"
-              onClick={() =>
-                handleApplyPreset(
-                  "Oral Polio Vaccine (OPV)",
-                  "FROZEN",
-                  "Deep freezer transport vehicle (-20°C)"
-                )
-              }
-              className="px-3 py-1.5 rounded-lg bg-slate-900/70 hover:bg-blue-950/40 border border-slate-800 hover:border-blue-700/50 text-xs text-slate-300 hover:text-blue-300 transition-colors cursor-pointer"
-            >
-              -25°C to -15°C Frozen OPV
-            </button>
-            <button
-              type="button"
-              onClick={() =>
-                handleApplyPreset(
-                  "Pfizer-BioNTech Comirnaty mRNA",
-                  "ULTRA_COLD",
-                  "Specialized thermal shipper with dry ice (UN1845)"
-                )
-              }
-              className="px-3 py-1.5 rounded-lg bg-slate-900/70 hover:bg-purple-950/40 border border-slate-800 hover:border-purple-700/50 text-xs text-slate-300 hover:text-purple-300 transition-colors cursor-pointer"
-            >
-              -80°C to -60°C mRNA ULT
-            </button>
-          </div>
-        </div>
-
-        {/* Action Button */}
-        <div className="pt-4 border-t border-slate-800/80 flex flex-col sm:flex-row items-center justify-between gap-4">
-          <p className="text-xs text-slate-400 flex items-center gap-1.5">
-            <Info className="h-4 w-4 text-cyan-400 flex-shrink-0" />
-            Once launched, incoming ESP32 sensor telemetry will automatically link to this session until concluded.
+        {/* Action Button & Info */}
+        <div className="glass rounded-2xl p-4 sm:p-5 border border-white/[0.08] flex flex-col sm:flex-row items-center justify-between gap-4">
+          <p className="text-xs text-slate-400 flex items-center gap-2">
+            <Info className="h-4 w-4 text-blue-400 flex-shrink-0" />
+            <span>Once launched, incoming ESP32 sensor telemetry will automatically link to this session until concluded.</span>
           </p>
 
           <button
             type="submit"
             disabled={loading}
-            className="w-full sm:w-auto px-8 py-3.5 bg-gradient-to-r from-cyan-500 hover:from-cyan-400 to-blue-600 hover:to-blue-500 text-slate-950 font-black text-sm rounded-xl flex items-center justify-center gap-2 shadow-xl shadow-cyan-950/60 hover:shadow-cyan-500/20 active:scale-[0.99] transition-all cursor-pointer disabled:opacity-50"
+            className="w-full sm:w-auto px-7 py-3 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white font-bold text-xs sm:text-sm rounded-xl flex items-center justify-center gap-2 shadow-lg shadow-blue-900/30 active:scale-[0.99] transition-all cursor-pointer disabled:opacity-50"
           >
             {loading ? (
               <>
-                <div className="h-4 w-4 border-2 border-slate-950 border-t-transparent rounded-full animate-spin" />
+                <div className="h-4 w-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
                 <span>Initializing Fleet Session...</span>
               </>
             ) : (

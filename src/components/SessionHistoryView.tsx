@@ -189,25 +189,25 @@ export default function SessionHistoryView({ onBack }: SessionHistoryViewProps) 
   return (
     <div className="w-full max-w-7xl mx-auto space-y-6 animate-in fade-in duration-300">
       {/* Header bar */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 p-6 glass rounded-3xl border border-white/10">
-        <div className="flex items-center gap-4">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 p-5 glass rounded-2xl border border-white/[0.08] shadow-lg">
+        <div className="flex items-center gap-3.5">
           <button
             type="button"
             onClick={onBack}
-            className="p-3 rounded-2xl bg-slate-900/80 hover:bg-slate-800 border border-slate-700/80 text-slate-300 hover:text-cyan-400 transition-colors cursor-pointer group"
-            title="Return to Launchpad"
+            className="p-2.5 rounded-xl bg-slate-900/90 hover:bg-slate-800 border border-white/[0.08] hover:border-blue-500/40 text-slate-300 hover:text-white transition-all cursor-pointer group flex-shrink-0"
+            title="Return to Dashboard"
           >
-            <ArrowLeft className="h-5 w-5 group-hover:-translate-x-0.5 transition-transform" />
+            <ArrowLeft className="h-4 w-4 group-hover:-translate-x-0.5 transition-transform" />
           </button>
           <div>
-            <div className="inline-flex items-center gap-2 px-2.5 py-0.5 rounded-full bg-cyan-950/60 border border-cyan-800/50 text-[10px] font-mono uppercase font-bold text-cyan-300 mb-1">
+            <div className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-md bg-blue-950/40 border border-blue-500/25 text-[10px] font-mono uppercase font-bold text-blue-300 mb-0.5">
               Historical Compliance Archive
             </div>
-            <h1 className="text-xl sm:text-2xl font-black text-white tracking-tight">
-              Shipment Session History & Logs
+            <h1 className="text-lg sm:text-xl font-bold text-white tracking-tight">
+              Shipment Session History &amp; Logs
             </h1>
-            <p className="text-xs text-slate-400 mt-0.5">
-              Query past cold-chain sessions by specific date, time, vaccine payload, and inspect full telemetry logs.
+            <p className="text-xs text-slate-400">
+              Query past cold-chain sessions by date, status, or payload, and generate AI compliance summaries.
             </p>
           </div>
         </div>
@@ -216,36 +216,36 @@ export default function SessionHistoryView({ onBack }: SessionHistoryViewProps) 
           type="button"
           onClick={fetchSessions}
           disabled={loading}
-          className="p-2.5 rounded-xl bg-slate-900/80 hover:bg-slate-800 border border-slate-700 text-slate-300 hover:text-cyan-300 transition-all cursor-pointer self-start sm:self-center"
+          className="p-2.5 rounded-xl bg-slate-900/90 hover:bg-slate-800 border border-white/[0.08] hover:border-blue-500/40 text-slate-300 hover:text-white transition-all cursor-pointer self-start sm:self-center"
           title="Refresh History"
         >
-          <RefreshCw className={`h-4 w-4 ${loading ? "animate-spin text-cyan-400" : ""}`} />
+          <RefreshCw className={`h-4 w-4 ${loading ? "animate-spin text-blue-400" : ""}`} />
         </button>
       </div>
 
       {/* Filter / Search Bar */}
-      <div className="p-5 glass rounded-2xl border border-white/10 space-y-4">
+      <div className="p-4 sm:p-5 glass rounded-2xl border border-white/[0.08] shadow-lg space-y-3">
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
           {/* Search by Vaccine Name or Code */}
           <div className="relative">
-            <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-500" />
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-slate-500" />
             <input
               type="text"
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
               placeholder="Search vaccine, code, batch..."
-              className="w-full pl-10 pr-4 py-2.5 bg-slate-900/80 border border-slate-700/80 rounded-xl text-xs text-slate-100 placeholder-slate-500 focus:outline-none focus:border-cyan-400"
+              className="w-full pl-9 pr-3.5 py-2 bg-slate-900/80 border border-white/[0.08] rounded-xl text-xs text-slate-100 placeholder-slate-500 focus:outline-none focus:border-blue-500 transition-colors"
             />
           </div>
 
           {/* Date Filter */}
           <div className="relative">
-            <Calendar className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-500 pointer-events-none" />
+            <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-slate-500 pointer-events-none" />
             <input
               type="date"
               value={selectedDate}
               onChange={(e) => setSelectedDate(e.target.value)}
-              className="w-full pl-10 pr-4 py-2.5 bg-slate-900/80 border border-slate-700/80 rounded-xl text-xs text-slate-100 font-mono focus:outline-none focus:border-cyan-400 cursor-pointer"
+              className="w-full pl-9 pr-3.5 py-2 bg-slate-900/80 border border-white/[0.08] rounded-xl text-xs text-slate-100 font-mono focus:outline-none focus:border-blue-500 cursor-pointer transition-colors"
             />
           </div>
 
@@ -254,7 +254,7 @@ export default function SessionHistoryView({ onBack }: SessionHistoryViewProps) 
             <select
               value={tierFilter}
               onChange={(e) => setTierFilter(e.target.value)}
-              className="w-full px-3.5 py-2.5 bg-slate-900/80 border border-slate-700/80 rounded-xl text-xs text-slate-100 focus:outline-none focus:border-cyan-400 cursor-pointer"
+              className="w-full px-3 py-2 bg-slate-900/80 border border-white/[0.08] rounded-xl text-xs text-slate-100 focus:outline-none focus:border-blue-500 cursor-pointer transition-colors"
             >
               <option value="ALL">All Vaccine Tiers</option>
               <option value="STANDARD_REFRIGERATED">+2°C to +8°C Standard</option>
@@ -268,7 +268,7 @@ export default function SessionHistoryView({ onBack }: SessionHistoryViewProps) 
             <select
               value={statusFilter}
               onChange={(e) => setStatusFilter(e.target.value)}
-              className="w-full px-3.5 py-2.5 bg-slate-900/80 border border-slate-700/80 rounded-xl text-xs text-slate-100 focus:outline-none focus:border-cyan-400 cursor-pointer"
+              className="w-full px-3 py-2 bg-slate-900/80 border border-white/[0.08] rounded-xl text-xs text-slate-100 focus:outline-none focus:border-blue-500 cursor-pointer transition-colors"
             >
               <option value="ALL">All Statuses</option>
               <option value="COMPLETED">Completed</option>
@@ -284,7 +284,7 @@ export default function SessionHistoryView({ onBack }: SessionHistoryViewProps) 
                   setTierFilter("ALL");
                   setStatusFilter("ALL");
                 }}
-                className="px-3 py-2.5 rounded-xl bg-slate-800 text-slate-400 hover:text-white text-xs font-semibold whitespace-nowrap cursor-pointer transition-colors"
+                className="px-3 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white text-xs font-semibold whitespace-nowrap cursor-pointer transition-colors"
               >
                 Reset
               </button>
@@ -294,11 +294,11 @@ export default function SessionHistoryView({ onBack }: SessionHistoryViewProps) 
 
         <div className="flex items-center justify-between text-[11px] text-slate-400 pt-1">
           <span>
-            Found <span className="font-bold text-cyan-300 font-mono">{filteredSessions.length}</span> recorded sessions
+            Found <strong className="text-white font-mono">{filteredSessions.length}</strong> recorded sessions
           </span>
           {selectedDate && (
-            <span className="font-mono text-cyan-400">
-              Filtered for date: {new Date(selectedDate + "T00:00:00").toLocaleDateString(undefined, { dateStyle: "medium" })}
+            <span className="font-mono text-blue-400">
+              Filtered for: {new Date(selectedDate + "T00:00:00").toLocaleDateString(undefined, { dateStyle: "medium" })}
             </span>
           )}
         </div>
@@ -306,22 +306,22 @@ export default function SessionHistoryView({ onBack }: SessionHistoryViewProps) 
 
       {/* History Session Cards List */}
       {loading ? (
-        <div className="p-12 text-center text-cyan-400 font-mono text-xs flex items-center justify-center gap-2">
-          <div className="h-4 w-4 border-2 border-cyan-400 border-t-transparent rounded-full animate-spin" />
+        <div className="p-12 text-center text-blue-400 font-mono text-xs flex items-center justify-center gap-2">
+          <div className="h-4 w-4 border-2 border-blue-400 border-t-transparent rounded-full animate-spin" />
           Loading audit archives...
         </div>
       ) : filteredSessions.length === 0 ? (
-        <div className="p-12 text-center glass rounded-3xl border border-white/10 space-y-3">
+        <div className="p-12 text-center glass rounded-2xl border border-white/[0.08] space-y-3">
           <History className="h-10 w-10 text-slate-600 mx-auto" />
           <h3 className="text-base font-bold text-slate-200">No matching transit sessions found</h3>
           <p className="text-xs text-slate-400 max-w-md mx-auto">
             {sessions.length === 0
-              ? "No transit sessions have been conducted yet. Return to the launchpad to start your first session!"
+              ? "No transit sessions have been conducted yet. Return to the dashboard to start your first session!"
               : "Try adjusting your search criteria, date filter, or classification tier to view matching records."}
           </p>
         </div>
       ) : (
-        <div className="grid grid-cols-1 gap-4">
+        <div className="grid grid-cols-1 gap-3.5">
           {filteredSessions.map((session) => {
             const startDate = new Date(session.startedAt);
             const endDate = session.endedAt ? new Date(session.endedAt) : null;
@@ -329,45 +329,43 @@ export default function SessionHistoryView({ onBack }: SessionHistoryViewProps) 
               ? ((endDate.getTime() - startDate.getTime()) / (1000 * 60 * 60)).toFixed(1)
               : null;
 
-            const isCompliant = session.finalStatus === "NOMINAL" || session.excursionCount === 0;
-
             return (
               <div
                 key={session.id}
-                className="p-5 sm:p-6 glass rounded-2xl border border-white/10 hover:border-slate-700 transition-all flex flex-col lg:flex-row lg:items-center justify-between gap-5 group"
+                className="p-5 glass rounded-2xl border border-white/[0.08] hover:border-blue-500/30 transition-all flex flex-col lg:flex-row lg:items-center justify-between gap-5 group shadow-sm hover:shadow-md"
               >
                 {/* Left: Code, Name, Tier, Dates */}
-                <div className="space-y-2">
-                  <div className="flex flex-wrap items-center gap-2.5">
-                    <span className="font-mono text-xs font-bold px-2.5 py-0.5 rounded-lg bg-slate-800 text-cyan-300 border border-slate-700">
+                <div className="space-y-2 max-w-xl">
+                  <div className="flex flex-wrap items-center gap-2">
+                    <span className="font-mono text-xs font-bold px-2 py-0.5 rounded-md bg-blue-950/40 text-blue-300 border border-blue-500/30">
                       {session.sessionCode}
                     </span>
                     <span
-                      className={`text-[10px] font-mono px-2 py-0.5 rounded font-bold uppercase ${
+                      className={`text-[10px] font-mono px-2 py-0.5 rounded-md font-bold uppercase ${
                         session.status === "ACTIVE"
-                          ? "bg-emerald-950/90 text-emerald-300 border border-emerald-800/60 animate-pulse"
-                          : "bg-slate-800 text-slate-300 border border-slate-700"
+                          ? "bg-emerald-500/10 text-emerald-300 border border-emerald-500/30 animate-pulse"
+                          : "bg-slate-800 text-slate-300 border border-white/[0.06]"
                       }`}
                     >
                       {session.status}
                     </span>
-                    <span className="text-[10px] font-mono font-bold px-2 py-0.5 rounded bg-cyan-950/70 text-cyan-300 border border-cyan-800/40">
+                    <span className="text-[10px] font-mono font-bold px-2 py-0.5 rounded-md bg-slate-900 text-slate-300 border border-white/[0.08]">
                       {session.vaccineTier}
                     </span>
                     {session.batchNumber && (
-                      <span className="text-[10px] font-mono text-slate-400 bg-slate-900 px-2 py-0.5 rounded border border-slate-800">
+                      <span className="text-[10px] font-mono text-slate-400 bg-slate-900/60 px-2 py-0.5 rounded-md border border-white/[0.04]">
                         {session.batchNumber}
                       </span>
                     )}
                   </div>
 
-                  <h3 className="text-base sm:text-lg font-bold text-white tracking-tight">
+                  <h3 className="text-base font-bold text-white tracking-tight">
                     {session.vaccineName}
                   </h3>
 
                   {/* Route & Timestamp */}
                   <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-slate-400">
-                    <span className="flex items-center gap-1">
+                    <span className="flex items-center gap-1.5">
                       <MapPin className="h-3 w-3 text-cyan-400" />
                       <span>{session.origin}</span>
                       <span className="text-slate-600">➔</span>
@@ -384,10 +382,10 @@ export default function SessionHistoryView({ onBack }: SessionHistoryViewProps) 
                 </div>
 
                 {/* Right: Summary Metrics & Inspect Button */}
-                <div className="flex flex-wrap items-center gap-4 sm:gap-6 pt-3 lg:pt-0 border-t lg:border-t-0 border-slate-800">
+                <div className="flex flex-wrap items-center gap-4 sm:gap-6 pt-3 lg:pt-0 border-t lg:border-t-0 border-white/[0.06]">
                   {/* Total Readings */}
                   <div className="flex flex-col text-left lg:text-right">
-                    <span className="text-[10px] uppercase font-mono text-slate-400 font-bold">Telemetry Points</span>
+                    <span className="text-[10px] uppercase font-mono text-slate-400 font-bold">Telemetry</span>
                     <span className="font-mono text-sm font-bold text-slate-100">
                       {session.totalReadings || session._count?.telemetryLogs || 0}
                     </span>
@@ -395,8 +393,8 @@ export default function SessionHistoryView({ onBack }: SessionHistoryViewProps) 
 
                   {/* Temperature Adherence */}
                   <div className="flex flex-col text-left lg:text-right">
-                    <span className="text-[10px] uppercase font-mono text-slate-400 font-bold">Avg Temperature</span>
-                    <span className="font-mono text-sm font-bold text-cyan-300">
+                    <span className="text-[10px] uppercase font-mono text-slate-400 font-bold">Avg Temp</span>
+                    <span className="font-mono text-sm font-bold text-slate-200">
                       {session.avgTemperature !== null ? `${session.avgTemperature}°C` : "—"}
                     </span>
                   </div>
@@ -416,7 +414,7 @@ export default function SessionHistoryView({ onBack }: SessionHistoryViewProps) 
                   {/* Final Viability */}
                   <div className="flex flex-col text-left lg:text-right">
                     <span className="text-[10px] uppercase font-mono text-slate-400 font-bold">Final Potency</span>
-                    <span className="font-mono text-sm font-bold text-emerald-300">
+                    <span className="font-mono text-sm font-bold text-emerald-400">
                       {session.finalViability !== null ? `${(session.finalViability * 100).toFixed(1)}%` : "100%"}
                     </span>
                   </div>
@@ -426,20 +424,20 @@ export default function SessionHistoryView({ onBack }: SessionHistoryViewProps) 
                     <button
                       type="button"
                       onClick={() => setAiSummarySessionId(session.id)}
-                      className="px-3.5 py-2.5 rounded-xl bg-gradient-to-r from-cyan-950/90 to-blue-950/90 hover:from-cyan-900 hover:to-blue-900 border border-cyan-500/50 hover:border-cyan-400 text-cyan-200 hover:text-white text-xs font-bold flex items-center gap-1.5 shadow-md shadow-cyan-950/60 transition-all cursor-pointer group"
+                      className="px-3 py-2 rounded-xl bg-gradient-to-r from-blue-600/20 to-indigo-600/20 hover:from-blue-600/30 hover:to-indigo-600/30 border border-blue-500/40 text-blue-200 hover:text-white text-xs font-semibold flex items-center gap-1.5 shadow-sm transition-all cursor-pointer group"
                       title="Generate non-technical AI summary for this trip"
                     >
-                      <Sparkles className="h-3.5 w-3.5 text-cyan-400 group-hover:scale-110 transition-transform animate-pulse" />
+                      <Sparkles className="h-3.5 w-3.5 text-blue-400 group-hover:scale-110 transition-transform" />
                       <span>Summarize</span>
                     </button>
 
                     <button
                       type="button"
                       onClick={() => handleInspectSession(session.id)}
-                      className="px-3.5 py-2.5 rounded-xl bg-slate-800/80 hover:bg-slate-700/80 border border-slate-700 hover:border-slate-600 text-slate-200 hover:text-white text-xs font-semibold flex items-center gap-1.5 shadow transition-all cursor-pointer"
+                      className="px-3 py-2 rounded-xl bg-slate-900/90 hover:bg-slate-800 border border-white/[0.08] hover:border-white/[0.15] text-slate-200 text-xs font-semibold flex items-center gap-1.5 shadow-sm transition-all cursor-pointer"
                     >
                       <FileText className="h-3.5 w-3.5 text-slate-400" />
-                      <span>View Audit Logs</span>
+                      <span>View Audit</span>
                     </button>
                   </div>
                 </div>
@@ -454,21 +452,25 @@ export default function SessionHistoryView({ onBack }: SessionHistoryViewProps) 
         <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-6 bg-black/85 backdrop-blur-md overflow-y-auto animate-in fade-in duration-200">
           <div className="relative w-full max-w-5xl glass rounded-3xl p-6 sm:p-8 border border-white/10 shadow-2xl my-8 max-h-[90vh] overflow-y-auto space-y-6">
             {/* Modal Header */}
-            <div className="flex items-start justify-between border-b border-slate-800 pb-4">
+            <div className="flex items-start justify-between border-b border-white/[0.08] pb-4">
               <div>
                 <div className="flex items-center gap-2 mb-1">
-                  <span className="font-mono text-xs font-bold px-2 py-0.5 rounded bg-slate-800 text-cyan-300 border border-slate-700">
+                  <span className="font-mono text-xs font-bold px-2 py-0.5 rounded-md bg-blue-950/40 text-blue-300 border border-blue-500/30">
                     {detailedSession?.sessionCode}
                   </span>
-                  <span className="text-[10px] font-mono uppercase px-2 py-0.5 rounded bg-cyan-950/80 text-cyan-300 border border-cyan-800/50">
+                  <span className="text-[10px] font-mono uppercase px-2 py-0.5 rounded-md bg-slate-900 text-slate-300 border border-white/[0.08]">
                     {detailedSession?.vaccineTier}
                   </span>
                 </div>
-                <h2 className="text-xl sm:text-2xl font-black text-white">
+                <h2 className="text-xl sm:text-2xl font-bold text-white tracking-tight">
                   {detailedSession?.vaccineName}
                 </h2>
-                <p className="text-xs text-slate-400 mt-1">
-                  {detailedSession?.origin} ➔ {detailedSession?.destination}
+                <p className="text-xs text-slate-400 mt-1 flex items-center gap-1.5">
+                  <MapPin className="h-3 w-3 text-cyan-400" />
+                  <span>{detailedSession?.origin}</span>
+                  <span className="text-slate-600">➔</span>
+                  <Truck className="h-3 w-3 text-emerald-400" />
+                  <span className="text-slate-300">{detailedSession?.destination}</span>
                 </p>
               </div>
 
@@ -478,19 +480,19 @@ export default function SessionHistoryView({ onBack }: SessionHistoryViewProps) 
                     <button
                       type="button"
                       onClick={() => setAiSummarySessionId(detailedSession.id)}
-                      className="p-2.5 rounded-xl bg-gradient-to-r from-cyan-950/90 to-blue-950/90 hover:from-cyan-900 hover:to-blue-900 border border-cyan-500/50 text-cyan-200 hover:text-white text-xs font-bold flex items-center gap-1.5 transition-colors cursor-pointer"
+                      className="px-3 py-2 rounded-xl bg-gradient-to-r from-blue-600/20 to-indigo-600/20 hover:from-blue-600/30 hover:to-indigo-600/30 border border-blue-500/40 text-blue-200 hover:text-white text-xs font-semibold flex items-center gap-1.5 transition-colors cursor-pointer"
                       title="Generate AI Trip Summary"
                     >
-                      <Sparkles className="h-4 w-4 text-cyan-400 animate-pulse" />
+                      <Sparkles className="h-3.5 w-3.5 text-blue-400" />
                       <span className="hidden sm:inline">Summarize</span>
                     </button>
                     <button
                       type="button"
                       onClick={() => exportSessionJson(detailedSession)}
-                      className="p-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 border border-slate-700 text-slate-300 text-xs flex items-center gap-1.5 transition-colors cursor-pointer"
+                      className="px-3 py-2 rounded-xl bg-slate-900/90 hover:bg-slate-800 border border-white/[0.08] text-slate-200 text-xs flex items-center gap-1.5 transition-colors cursor-pointer"
                       title="Export Audit JSON"
                     >
-                      <Download className="h-4 w-4" />
+                      <Download className="h-3.5 w-3.5 text-slate-400" />
                       <span className="hidden sm:inline">Export Audit</span>
                     </button>
                   </>
@@ -506,45 +508,45 @@ export default function SessionHistoryView({ onBack }: SessionHistoryViewProps) 
             </div>
 
             {detailLoading ? (
-              <div className="py-20 text-center text-cyan-400 font-mono text-xs flex items-center justify-center gap-2">
-                <div className="h-4 w-4 border-2 border-cyan-400 border-t-transparent rounded-full animate-spin" />
+              <div className="py-20 text-center text-blue-400 font-mono text-xs flex items-center justify-center gap-2">
+                <div className="h-4 w-4 border-2 border-blue-400 border-t-transparent rounded-full animate-spin" />
                 Retrieving telemetry logs...
               </div>
             ) : detailedSession ? (
               <div className="space-y-6">
                 {/* Audit Summary Grid */}
                 <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-                  <div className="p-3.5 rounded-xl bg-slate-900/80 border border-slate-800">
+                  <div className="p-3.5 rounded-xl bg-slate-900/60 border border-white/[0.06]">
                     <span className="text-[10px] uppercase font-mono text-slate-400 block font-bold">Allowed Range</span>
                     <span className="font-mono text-sm font-bold text-slate-200">
                       {detailedSession.minTemp}°C to {detailedSession.maxTemp}°C
                     </span>
                   </div>
-                  <div className="p-3.5 rounded-xl bg-slate-900/80 border border-slate-800">
+                  <div className="p-3.5 rounded-xl bg-slate-900/60 border border-white/[0.06]">
                     <span className="text-[10px] uppercase font-mono text-slate-400 block font-bold">Avg Recorded Temp</span>
-                    <span className="font-mono text-sm font-bold text-cyan-300">
+                    <span className="font-mono text-sm font-bold text-slate-100">
                       {detailedSession.avgTemperature !== null ? `${detailedSession.avgTemperature}°C` : "—"}
                     </span>
                   </div>
-                  <div className="p-3.5 rounded-xl bg-slate-900/80 border border-slate-800">
+                  <div className="p-3.5 rounded-xl bg-slate-900/60 border border-white/[0.06]">
                     <span className="text-[10px] uppercase font-mono text-slate-400 block font-bold">Excursion Events</span>
                     <span className={`font-mono text-sm font-bold ${detailedSession.excursionCount > 0 ? "text-amber-400" : "text-emerald-400"}`}>
                       {detailedSession.excursionCount} breaches
                     </span>
                   </div>
-                  <div className="p-3.5 rounded-xl bg-slate-900/80 border border-slate-800">
+                  <div className="p-3.5 rounded-xl bg-slate-900/60 border border-white/[0.06]">
                     <span className="text-[10px] uppercase font-mono text-slate-400 block font-bold">Final Viability</span>
-                    <span className="font-mono text-sm font-bold text-emerald-300">
+                    <span className="font-mono text-sm font-bold text-emerald-400">
                       {detailedSession.finalViability !== null ? `${(detailedSession.finalViability * 100).toFixed(1)}%` : "100%"}
                     </span>
                   </div>
                 </div>
 
                 {/* Historical Recharts Temperature Profile */}
-                <div className="p-4 sm:p-5 rounded-2xl bg-slate-900/70 border border-slate-800">
+                <div className="p-4 sm:p-5 rounded-2xl bg-slate-900/50 border border-white/[0.06]">
                   <div className="flex items-center justify-between mb-4">
                     <h4 className="text-xs font-mono uppercase tracking-wider font-bold text-slate-200 flex items-center gap-2">
-                      <Thermometer className="h-4 w-4 text-cyan-400" />
+                      <Thermometer className="h-4 w-4 text-amber-400" />
                       Thermal Profile Adherence Over Transit Journey
                     </h4>
                     <span className="text-[10px] font-mono text-slate-400">
@@ -574,9 +576,9 @@ export default function SessionHistoryView({ onBack }: SessionHistoryViewProps) 
                               fontSize: "12px",
                             }}
                           />
-                          <ReferenceLine y={detailedSession.maxTemp} stroke="#ef4444" strokeDasharray="4 4" label={{ value: `Max ${detailedSession.maxTemp}°C`, fill: "#ef4444", fontSize: 10 }} />
-                          <ReferenceLine y={detailedSession.minTemp} stroke="#06b6d4" strokeDasharray="4 4" label={{ value: `Min ${detailedSession.minTemp}°C`, fill: "#06b6d4", fontSize: 10 }} />
-                          <Line type="monotone" dataKey="temp" stroke="#38bdf8" strokeWidth={2} dot={false} name="Temperature (°C)" />
+                          <ReferenceLine y={detailedSession.maxTemp} stroke="#f43f5e" strokeDasharray="4 4" label={{ value: `Max ${detailedSession.maxTemp}°C`, fill: "#f43f5e", fontSize: 10 }} />
+                          <ReferenceLine y={detailedSession.minTemp} stroke="#3b82f6" strokeDasharray="4 4" label={{ value: `Min ${detailedSession.minTemp}°C`, fill: "#3b82f6", fontSize: 10 }} />
+                          <Line type="monotone" dataKey="temp" stroke="#f59e0b" strokeWidth={2} dot={false} name="Temperature (°C)" />
                         </LineChart>
                       </ResponsiveContainer>
                     </div>

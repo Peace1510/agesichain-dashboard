@@ -86,25 +86,27 @@ export default function TelemetryCharts({ readings, className }: TelemetryCharts
   }, [data]);
 
   return (
-    <div className={cn("glass rounded-2xl p-6 flex flex-col gap-6", className)}>
-      {/* Header with selector tabs */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-800/80 pb-4">
-        <div className="flex items-center gap-2.5">
-          <Activity className="h-5 w-5 text-cyan-400" />
-          <h2 className="text-base font-bold text-slate-100 tracking-tight">
-            Kinetic Telemetry Visualizer
-          </h2>
-          <span className="text-xs text-slate-500 mono">({data.length} data points)</span>
+    <div className={cn("flex flex-col gap-5", className)}>
+      {/* Sub-header with selector tabs */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-2 border-b border-white/[0.04]">
+        <div className="flex items-center gap-2">
+          <Activity className="h-4 w-4 text-blue-400" />
+          <h3 className="text-xs font-bold uppercase tracking-wider text-slate-300">
+            Real-Time Kinetic Curves
+          </h3>
+          <span className="text-[11px] text-slate-500 mono bg-slate-900/60 px-2 py-0.5 rounded-full border border-white/[0.04]">
+            {data.length} telemetry points
+          </span>
         </div>
 
         {/* Tab switcher */}
-        <div className="flex items-center gap-1 bg-slate-900/90 p-1 rounded-xl border border-slate-800 self-start sm:self-auto">
+        <div className="flex items-center gap-1 bg-slate-950/70 p-1 rounded-xl border border-white/[0.06] self-start sm:self-auto">
           <button
             onClick={() => setActiveTab("both")}
             className={cn(
-              "px-3 py-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer",
+              "px-3 py-1 rounded-lg text-xs font-medium transition-all cursor-pointer",
               activeTab === "both"
-                ? "bg-cyan-500/20 text-cyan-300 border border-cyan-500/30 shadow-sm"
+                ? "bg-blue-600 text-white shadow-sm"
                 : "text-slate-400 hover:text-slate-200"
             )}
           >
@@ -113,9 +115,9 @@ export default function TelemetryCharts({ readings, className }: TelemetryCharts
           <button
             onClick={() => setActiveTab("temperature")}
             className={cn(
-              "px-3 py-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer",
+              "px-3 py-1 rounded-lg text-xs font-medium transition-all cursor-pointer",
               activeTab === "temperature"
-                ? "bg-amber-500/20 text-amber-300 border border-amber-500/30 shadow-sm"
+                ? "bg-amber-600 text-white shadow-sm"
                 : "text-slate-400 hover:text-slate-200"
             )}
           >
@@ -124,9 +126,9 @@ export default function TelemetryCharts({ readings, className }: TelemetryCharts
           <button
             onClick={() => setActiveTab("viability")}
             className={cn(
-              "px-3 py-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer",
+              "px-3 py-1 rounded-lg text-xs font-medium transition-all cursor-pointer",
               activeTab === "viability"
-                ? "bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 shadow-sm"
+                ? "bg-emerald-600 text-white shadow-sm"
                 : "text-slate-400 hover:text-slate-200"
             )}
           >
