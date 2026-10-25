@@ -71,15 +71,45 @@ export async function getOlaMapsAccessToken(): Promise<string | null> {
   }
 }
 
-export async function getOlaMapsHeaders(): Promise<Record<string, string>> {
+/**
+ * Standard fetch wrapper for all Ola Maps API endpoints.
+ * Automatically injects OAuth2 Bearer token (or falls back to api_key param only if no token is available).
+ */
+export async function fetchOlaMaps(
+  path: string,
+  searchParams: Record<string, string> = {},
+  init?: RequestInit
+): Promise<Response> {
+  const url = new URL(`https://api.olamaps.io${path}`);
+  for (const [k, v] of Object.entries(searchParams)) {
+    url.searchParams.set(k, v);
+  }
+
+  const token = await getOlaMapsAccessToken();
   const headers: Record<string, string> = {
     "X-Request-Id": crypto.randomUUID(),
   };
 
-  const token = await getOlaMapsAccessToken();
   if (token) {
     headers["Authorization"] = `Bearer ${token}`;
+    // IMPORTANT: Do NOT set ?api_key query param when Bearer token is present!
+    // Ola Maps will prioritize the query param, which leads to 401 if it contains an old/AI Studio key.
+  } else {
+    // Only fall back to api_key query param if NO OAuth token was obtained
+    const apiKey =
+      process.env.OLA_MAPS_API_KEY ??
+      process.env.NEXT_PUBLIC_OLA_MAPS_API_KEY ??
+      "";
+    if (apiKey) {
+      url.searchParams.set("api_key", apiKey);
+    }
   }
 
-  return headers;
+  return fetch(url.toString(), {
+    ...init,
+    headers: {
+      ...headers,
+      ...(init?.headers as Record<string, string> | undefined),
+    },
+  });
 }

@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getOlaMapsHeaders } from "@/lib/olamaps";
+import { fetchOlaMaps } from "@/lib/olamaps";
 
 export async function GET(req: NextRequest) {
   const originLat = req.nextUrl.searchParams.get("originLat");
@@ -12,23 +12,14 @@ export async function GET(req: NextRequest) {
   }
 
   try {
-    const headers = await getOlaMapsHeaders();
-    const url = new URL("https://api.olamaps.io/routing/v1/distanceMatrix");
-    url.searchParams.set("origins", `${originLat},${originLng}`);
-    url.searchParams.set("destinations", `${destLat},${destLng}`);
-
-    const apiKey =
-      process.env.OLA_MAPS_API_KEY ??
-      process.env.NEXT_PUBLIC_OLA_MAPS_API_KEY ??
-      "";
-    if (apiKey) {
-      url.searchParams.set("api_key", apiKey);
-    }
-
-    const res = await fetch(url.toString(), {
-      headers,
-      next: { revalidate: 0 },
-    });
+    const res = await fetchOlaMaps(
+      "/routing/v1/distanceMatrix",
+      {
+        origins: `${originLat},${originLng}`,
+        destinations: `${destLat},${destLng}`,
+      },
+      { next: { revalidate: 0 } }
+    );
 
     if (!res.ok) {
       const errText = await res.text();
@@ -38,7 +29,7 @@ export async function GET(req: NextRequest) {
 
     const data = await res.json();
 
-    // Ola Maps can return either raw seconds/meters number or { value: number } object
+    // Ola Maps returns duration in seconds and distance in meters
     const rawDuration = data?.rows?.[0]?.elements?.[0]?.duration;
     const durationSec: number | null =
       typeof rawDuration === "number"

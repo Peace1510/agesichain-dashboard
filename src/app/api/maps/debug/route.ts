@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { getOlaMapsAccessToken, getOlaMapsHeaders } from "@/lib/olamaps";
+import { getOlaMapsAccessToken, fetchOlaMaps } from "@/lib/olamaps";
 
 export async function GET() {
   const OLA_KEY =
@@ -24,16 +24,7 @@ export async function GET() {
       tokenPreview = `${token.slice(0, 10)}...${token.slice(-6)} (len=${token.length})`;
     }
 
-    const headers = await getOlaMapsHeaders();
-    const url = new URL("https://api.olamaps.io/places/v1/autocomplete");
-    url.searchParams.set("input", "pune");
-    if (OLA_KEY) {
-      url.searchParams.set("api_key", OLA_KEY);
-    }
-
-    const res = await fetch(url.toString(), {
-      headers,
-    });
+    const res = await fetchOlaMaps("/places/v1/autocomplete", { input: "pune" });
 
     olaStatus = res.status;
     const text = await res.text();

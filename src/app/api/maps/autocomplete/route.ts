@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getOlaMapsHeaders } from "@/lib/olamaps";
+import { fetchOlaMaps } from "@/lib/olamaps";
 
 export async function GET(req: NextRequest) {
   const input = req.nextUrl.searchParams.get("input");
@@ -8,23 +8,11 @@ export async function GET(req: NextRequest) {
   }
 
   try {
-    const headers = await getOlaMapsHeaders();
-    const url = new URL("https://api.olamaps.io/places/v1/autocomplete");
-    url.searchParams.set("input", input.trim());
-
-    // If API key is also available, pass as query param fallback
-    const apiKey =
-      process.env.OLA_MAPS_API_KEY ??
-      process.env.NEXT_PUBLIC_OLA_MAPS_API_KEY ??
-      "";
-    if (apiKey) {
-      url.searchParams.set("api_key", apiKey);
-    }
-
-    const res = await fetch(url.toString(), {
-      headers,
-      next: { revalidate: 0 },
-    });
+    const res = await fetchOlaMaps(
+      "/places/v1/autocomplete",
+      { input: input.trim() },
+      { next: { revalidate: 0 } }
+    );
 
     const rawText = await res.text();
 

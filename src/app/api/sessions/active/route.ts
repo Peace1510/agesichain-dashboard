@@ -13,36 +13,41 @@ export async function GET(): Promise<NextResponse> {
 
     // If store memory is cold (e.g. after server restart), check DB for currently ACTIVE session
     if (!active) {
-      const dbActive = await prisma.transitSession.findFirst({
-        where: { status: "ACTIVE" },
-        orderBy: { startedAt: "desc" },
-      });
+      try {
+        const dbActive = await prisma.transitSession.findFirst({
+          where: { status: "ACTIVE" },
+          orderBy: { startedAt: "desc" },
+        });
 
-      if (dbActive) {
-        active = {
-          id: dbActive.id,
-          sessionCode: dbActive.sessionCode,
-          vaccineName: dbActive.vaccineName,
-          vaccineTier: dbActive.vaccineTier as VaccineTierType,
-          minTemp: dbActive.minTemp,
-          maxTemp: dbActive.maxTemp,
-          targetTemp: dbActive.targetTemp,
-          transportEquip: dbActive.transportEquip,
-          batchNumber: dbActive.batchNumber,
-          origin: dbActive.origin,
-          destination: dbActive.destination,
-          destinationLat: dbActive.destinationLat,
-          destinationLng: dbActive.destinationLng,
-          etaHours: dbActive.etaHours,
-          startedAt: dbActive.startedAt.toISOString(),
-          totalReadings: dbActive.totalReadings,
-          excursionCount: dbActive.excursionCount,
-          minRecordedTemp: dbActive.minRecordedTemp,
-          maxRecordedTemp: dbActive.maxRecordedTemp,
-        };
-        setActiveSession(active);
+        if (dbActive) {
+          active = {
+            id: dbActive.id,
+            sessionCode: dbActive.sessionCode,
+            vaccineName: dbActive.vaccineName,
+            vaccineTier: dbActive.vaccineTier as VaccineTierType,
+            minTemp: dbActive.minTemp,
+            maxTemp: dbActive.maxTemp,
+            targetTemp: dbActive.targetTemp,
+            transportEquip: dbActive.transportEquip,
+            batchNumber: dbActive.batchNumber,
+            origin: dbActive.origin,
+            destination: dbActive.destination,
+            destinationLat: dbActive.destinationLat,
+            destinationLng: dbActive.destinationLng,
+            etaHours: dbActive.etaHours,
+            startedAt: dbActive.startedAt.toISOString(),
+            totalReadings: dbActive.totalReadings,
+            excursionCount: dbActive.excursionCount,
+            minRecordedTemp: dbActive.minRecordedTemp,
+            maxRecordedTemp: dbActive.maxRecordedTemp,
+          };
+          setActiveSession(active);
+        }
+      } catch (dbErr) {
+        console.warn("[API/sessions/active] Database not initialized or unreachable:", dbErr);
       }
     }
+
 
     return NextResponse.json({
       success: true,
