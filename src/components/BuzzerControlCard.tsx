@@ -7,10 +7,10 @@ import {
   Bell,
   BellOff,
   AlertTriangle,
-  Play,
   RotateCcw,
   CheckCircle2,
   Radio,
+  Loader2,
 } from "lucide-react";
 
 interface BuzzerControlCardProps {
@@ -29,16 +29,26 @@ export default function BuzzerControlCard({
   loading,
 }: BuzzerControlCardProps) {
   const [testMode, setTestMode] = useState(false);
+  const [pendingAction, setPendingAction] = useState<string | null>(null);
 
   const isExcursion = currentTemp !== null && (currentTemp > 8.0 || currentTemp < 2.0);
+
+  const handleAction = async (action: "silence" | "rearm" | "test" | "stop_test") => {
+    setPendingAction(action);
+    try {
+      await onBuzzerAction(action);
+    } finally {
+      setPendingAction(null);
+    }
+  };
 
   const handleTestToggle = async () => {
     if (!testMode) {
       setTestMode(true);
-      await onBuzzerAction("test");
+      await handleAction("test");
     } else {
       setTestMode(false);
-      await onBuzzerAction("stop_test");
+      await handleAction("stop_test");
     }
   };
 
@@ -94,7 +104,7 @@ export default function BuzzerControlCard({
 
           {/* Current State Badge */}
           <div
-            className={`px-3 py-1 rounded-full text-xs font-mono font-bold flex items-center gap-1.5 border ${
+            className={`px-3 py-1 rounded-full text-xs font-mono font-bold flex items-center gap-1.5 border transition-all ${
               buzzerActive
                 ? "bg-orange-950/80 border-orange-500/80 text-orange-300 animate-pulse"
                 : "bg-slate-950/80 border-slate-800 text-slate-400"
@@ -104,6 +114,11 @@ export default function BuzzerControlCard({
               <>
                 <Bell className="h-3.5 w-3.5 text-orange-400 animate-spin" />
                 <span>BUZZING (ALARM ACTIVE)</span>
+              </>
+            ) : pendingAction === "silence" ? (
+              <>
+                <Loader2 className="h-3.5 w-3.5 text-cyan-400 animate-spin" />
+                <span>SYNCING TO KIT...</span>
               </>
             ) : (
               <>
@@ -142,35 +157,53 @@ export default function BuzzerControlCard({
       <div className="mt-4 pt-3 border-t border-slate-800/80 flex flex-wrap items-center gap-2.5">
         {/* Silence Button (Always visible) */}
         <button
-          onClick={() => onBuzzerAction("silence")}
-          disabled={loading}
-          className={`flex-1 min-w-[140px] flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl font-bold text-xs transition-all cursor-pointer disabled:opacity-50 ${
+          onClick={() => handleAction("silence")}
+          disabled={loading && pendingAction === "silence"}
+          className={`flex-1 min-w-[140px] flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl font-bold text-xs transition-all cursor-pointer disabled:opacity-75 ${
             buzzerActive
               ? "bg-orange-600 hover:bg-orange-500 text-white shadow-lg shadow-orange-950/50 border border-orange-400 active:scale-95"
               : "bg-slate-800 hover:bg-slate-700 text-slate-300 border border-slate-700"
           }`}
         >
-          <BellOff className="h-4 w-4" />
-          <span>Silence Buzzer</span>
+          {pendingAction === "silence" ? (
+            <>
+              <Loader2 className="h-4 w-4 animate-spin" />
+              <span>Silencing...</span>
+            </>
+          ) : (
+            <>
+              <BellOff className="h-4 w-4" />
+              <span>Silence Buzzer</span>
+            </>
+          )}
         </button>
 
         {/* Re-arm Button */}
         <button
-          onClick={() => onBuzzerAction("rearm")}
-          disabled={loading}
+          onClick={() => handleAction("rearm")}
+          disabled={loading && pendingAction === "rearm"}
           title="Re-arm threshold breach detection"
-          className="flex items-center gap-1.5 px-3.5 py-2.5 rounded-xl bg-slate-900 hover:bg-slate-800 border border-slate-800 hover:border-slate-700 text-slate-300 hover:text-cyan-300 font-medium text-xs transition-all cursor-pointer disabled:opacity-50"
+          className="flex items-center gap-1.5 px-3.5 py-2.5 rounded-xl bg-slate-900 hover:bg-slate-800 border border-slate-800 hover:border-slate-700 text-slate-300 hover:text-cyan-300 font-medium text-xs transition-all cursor-pointer disabled:opacity-75"
         >
-          <RotateCcw className="h-3.5 w-3.5 text-cyan-400" />
-          <span>Re-Arm</span>
+          {pendingAction === "rearm" ? (
+            <>
+              <Loader2 className="h-3.5 w-3.5 animate-spin text-cyan-400" />
+              <span>Re-arming...</span>
+            </>
+          ) : (
+            <>
+              <RotateCcw className="h-3.5 w-3.5 text-cyan-400" />
+              <span>Re-Arm</span>
+            </>
+          )}
         </button>
 
         {/* Hardware Test Button */}
         <button
           onClick={handleTestToggle}
-          disabled={loading}
+          disabled={loading && (pendingAction === "test" || pendingAction === "stop_test")}
           title="Send test signal to physical buzzer GPIO 32"
-          className={`flex items-center gap-1.5 px-3.5 py-2.5 rounded-xl font-medium text-xs transition-all cursor-pointer disabled:opacity-50 border ${
+          className={`flex items-center gap-1.5 px-3.5 py-2.5 rounded-xl font-medium text-xs transition-all cursor-pointer disabled:opacity-75 border ${
             testMode
               ? "bg-red-950/80 text-red-200 border-red-500 animate-pulse"
               : "bg-slate-900 hover:bg-slate-800 border-slate-800 text-slate-300 hover:text-amber-300"

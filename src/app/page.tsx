@@ -112,6 +112,13 @@ export default function ColdChainDashboardPage() {
 
   // Silence, re-arm, or test the buzzer from the dashboard
   const handleBuzzerControl = async (action: "silence" | "rearm" | "test" | "stop_test") => {
+    // 1. Optimistic UI update — instant visual feedback in 0ms
+    if (action === "silence" || action === "stop_test") {
+      setBuzzerActive(false);
+    } else if (action === "test") {
+      setBuzzerActive(true);
+    }
+
     setBuzzerLoading(true);
     try {
       const res = await fetch("/api/buzzer", {
@@ -125,6 +132,7 @@ export default function ColdChainDashboardPage() {
           setBuzzerActive(data.buzzer_active);
         }
       }
+      // Re-fetch telemetry in background to sync state
       fetchTelemetry();
     } catch (err) {
       console.error("Buzzer control failed", err);
@@ -132,6 +140,7 @@ export default function ColdChainDashboardPage() {
       setBuzzerLoading(false);
     }
   };
+
 
   // Update Route Destination and Transit ETA
   const handleUpdateRoute = async (newEta: number, newMeta: Partial<ShipmentMeta>) => {

@@ -57,8 +57,8 @@ const char* SERVER_URL = "https://ageischain.kirmadaa.tech/api/telemetry";
 // Device Identifier
 const char* DEVICE_ID = "ESP32_01";
 
-// 2-second transmission interval — gives TLS handshake room to breathe on mobile hotspot
-const unsigned long readInterval = 2000;
+// 1-second transmission interval for responsive closed-loop buzzer control
+const unsigned long readInterval = 1000;
 
 // ────────────────────────────────────────────────────────────────────────────
 // 2. HARDWARE PIN DEFINITIONS
@@ -219,11 +219,13 @@ void showLiveDashboard(float temp, float hum, bool hasLoc, double lat, double ln
 // ────────────────────────────────────────────────────────────────────────────
 
 void parseServerResponse(const String& payload) {
-  // 1. Extract buzzer command from server
+  // 1. Extract buzzer command from server and update pin immediately
   if (payload.indexOf("\"buzzer_active\":true") >= 0 || payload.indexOf("\"buzzer_active\": true") >= 0) {
     buzzerActiveFromServer = true;
+    digitalWrite(BUZZER_PIN, HIGH);
   } else if (payload.indexOf("\"buzzer_active\":false") >= 0 || payload.indexOf("\"buzzer_active\": false") >= 0) {
     buzzerActiveFromServer = false;
+    digitalWrite(BUZZER_PIN, LOW); // Cut off buzzer immediately!
   }
 
   Serial.print(F("[CLOUD SYNC] Buzzer: "));
@@ -382,10 +384,12 @@ void loop() {
       }
 
       HTTPClient http;
+      http.setReuse(true); // Keep-alive TLS connection across cycles
       if (http.begin(secureClient, SERVER_URL)) {
         http.addHeader("Content-Type", "application/json");
-        http.setTimeout(5000); // 5-second timeout — enough for TLS + mobile hotspot latency
-        http.setConnectTimeout(5000);
+        http.addHeader("Connection", "keep-alive");
+        http.setTimeout(3500);
+        http.setConnectTimeout(3500);
 
         int httpResponseCode = http.POST(jsonPayload);
         if (httpResponseCode > 0) {
