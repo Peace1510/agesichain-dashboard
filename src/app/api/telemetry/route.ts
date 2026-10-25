@@ -26,6 +26,7 @@ import {
   setShipmentMeta,
   type TelemetryReading,
 } from "@/lib/store";
+import { auth } from "@/auth";
 
 // ─────────────────────────────────────────────────────────────────────────────
 // TYPES
@@ -254,6 +255,16 @@ export async function GET(): Promise<NextResponse> {
  */
 export async function PATCH(request: NextRequest): Promise<NextResponse> {
   try {
+    const sessionAuth = await auth();
+    const userRole = (sessionAuth?.user as { role?: string })?.role;
+
+    if (userRole !== "ADMIN") {
+      return NextResponse.json(
+        { success: false, error: "Forbidden: Admin privileges required to update route or ETA." },
+        { status: 403 }
+      );
+    }
+
     const body = await request.json();
 
     if (typeof body.eta_hours === "number") {

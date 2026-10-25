@@ -73,6 +73,18 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
 export async function POST(request: NextRequest): Promise<NextResponse> {
   try {
     const sessionAuth = await auth();
+    const userRole = (sessionAuth?.user as { role?: string })?.role;
+
+    if (userRole !== "ADMIN") {
+      return NextResponse.json(
+        {
+          success: false,
+          error: "Forbidden: Logistics Inspectors (VIEWER) cannot launch sessions. Only Fleet Administrators have launch privileges.",
+        },
+        { status: 403 }
+      );
+    }
+
     const userId = sessionAuth?.user?.id;
 
     const body = await request.json();

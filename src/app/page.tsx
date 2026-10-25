@@ -30,10 +30,15 @@ import {
   Wifi,
   WifiOff,
 } from "lucide-react";
+import { useSession } from "next-auth/react";
 
 type ViewMode = "DASHBOARD" | "CREATE_SESSION" | "HISTORY";
 
 export default function ColdChainDashboardPage() {
+  const { data: sessionData } = useSession();
+  const userRole = (sessionData?.user as { role?: string })?.role || "VIEWER";
+  const isAdmin = userRole === "ADMIN";
+
   const [snapshot, setSnapshot] = useState<ColdChainSnapshot | null>(null);
   const [readings, setReadings] = useState<TelemetryReading[]>([]);
   const [meta, setMeta] = useState<ShipmentMeta>({
@@ -107,6 +112,13 @@ export default function ColdChainDashboardPage() {
     };
     initSession();
   }, []);
+
+  // Guard view mode: Only admins can enter CREATE_SESSION
+  useEffect(() => {
+    if (!isAdmin && viewMode === "CREATE_SESSION") {
+      setViewMode("DASHBOARD");
+    }
+  }, [isAdmin, viewMode]);
 
 
   // Silence, re-arm, or test the buzzer from the dashboard
@@ -223,8 +235,8 @@ export default function ColdChainDashboardPage() {
         />
       )}
 
-      {/* 2. VIEW MODE ROUTING: CREATE SESSION LAUNCHPAD */}
-      {viewMode === "CREATE_SESSION" && (
+      {/* 2. VIEW MODE ROUTING: CREATE SESSION LAUNCHPAD (ADMIN ONLY) */}
+      {viewMode === "CREATE_SESSION" && isAdmin && (
         <CreateSessionView
           onSessionCreated={handleSessionCreated}
           onOpenHistory={() => setViewMode("HISTORY")}
@@ -244,9 +256,9 @@ export default function ColdChainDashboardPage() {
             isConnected={isConnected}
             activeSession={activeSession}
             onRefresh={fetchTelemetry}
-            onEndSession={() => setIsEndModalOpen(true)}
+            onEndSession={isAdmin ? () => setIsEndModalOpen(true) : undefined}
             onOpenHistory={() => setViewMode("HISTORY")}
-            onOpenCreateSession={() => setViewMode("CREATE_SESSION")}
+            onOpenCreateSession={isAdmin ? () => setViewMode("CREATE_SESSION") : undefined}
           />
 
 
@@ -286,14 +298,16 @@ export default function ColdChainDashboardPage() {
                   {(currentViability * 100).toFixed(2)}% | TTS: {timeToSpoil !== null ? timeToSpoil.toFixed(1) + "h" : "—"}.
                 </p>
               </div>
-              <button
-                onClick={() => handleBuzzerControl("silence")}
-                disabled={buzzerLoading}
-                className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-orange-600 hover:bg-orange-500 border border-orange-400 text-white font-bold text-xs transition-all cursor-pointer disabled:opacity-50 shadow-lg shadow-orange-950/60 active:scale-95"
-              >
-                <BellOff className="h-4 w-4" />
-                Silence Buzzer
-              </button>
+              {isAdmin && (
+                <button
+                  onClick={() => handleBuzzerControl("silence")}
+                  disabled={buzzerLoading}
+                  className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-orange-600 hover:bg-orange-500 border border-orange-400 text-white font-bold text-xs transition-all cursor-pointer disabled:opacity-50 shadow-lg shadow-orange-950/60 active:scale-95"
+                >
+                  <BellOff className="h-4 w-4" />
+                  Silence Buzzer
+                </button>
+              )}
             </div>
           )}
 
@@ -515,6 +529,7 @@ export default function ColdChainDashboardPage() {
               loading={routeUpdating}
               currentLat={latestReading?.latitude}
               currentLng={latestReading?.longitude}
+              isAdmin={isAdmin}
             />
             <BuzzerControlCard
               buzzerActive={buzzerActive}
@@ -522,6 +537,7 @@ export default function ColdChainDashboardPage() {
               status={status}
               onBuzzerAction={handleBuzzerControl}
               loading={buzzerLoading}
+              isAdmin={isAdmin}
             />
           </div>
 

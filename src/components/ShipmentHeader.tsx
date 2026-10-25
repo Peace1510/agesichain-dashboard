@@ -18,6 +18,7 @@ import {
   AlertTriangle,
   PlusCircle,
 } from "lucide-react";
+import { useSession } from "next-auth/react";
 
 interface ShipmentHeaderProps {
   meta: ShipmentMeta;
@@ -46,6 +47,9 @@ export default function ShipmentHeader({
   onOpenCreateSession,
   className,
 }: ShipmentHeaderProps) {
+  const { data: session } = useSession();
+  const role = (session?.user as { role?: string })?.role || "VIEWER";
+  const isAdmin = role === "ADMIN";
 
   return (
     <header className={cn("glass rounded-2xl p-6 relative overflow-hidden", className)}>
@@ -119,8 +123,8 @@ export default function ShipmentHeader({
             </button>
           )}
 
-          {/* Launch New Session Button */}
-          {onOpenCreateSession && !activeSession && (
+          {/* Launch New Session Button - ONLY FOR ADMIN */}
+          {isAdmin && onOpenCreateSession && !activeSession && (
             <button
               onClick={onOpenCreateSession}
               title="Configure and Launch New Transit Session"
@@ -131,8 +135,8 @@ export default function ShipmentHeader({
             </button>
           )}
 
-          {/* End Session Button */}
-          {onEndSession && activeSession && (
+          {/* End Session Button - ONLY FOR ADMIN */}
+          {isAdmin && onEndSession && activeSession && (
             <button
               onClick={onEndSession}
               title="Conclude Active Transit Session"

@@ -32,6 +32,7 @@ interface DestinationConfigCardProps {
   loading: boolean;
   currentLat?: number | null;
   currentLng?: number | null;
+  isAdmin?: boolean;
 }
 
 interface PlaceResult {
@@ -61,6 +62,7 @@ export default function DestinationConfigCard({
   loading,
   currentLat,
   currentLng,
+  isAdmin = true,
 }: DestinationConfigCardProps) {
   const [isEditing, setIsEditing] = useState(false);
   const [name, setName] = useState(meta.name || "Vaccine Cold Chain Run");
@@ -257,13 +259,19 @@ export default function DestinationConfigCard({
             </div>
           </div>
 
-          <button
-            onClick={() => setIsEditing(!isEditing)}
-            className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 border border-slate-700 text-xs text-slate-300 hover:text-cyan-300 font-medium transition-all cursor-pointer"
-          >
-            <Sliders className="h-3.5 w-3.5 text-cyan-400" />
-            <span>{isEditing ? "Cancel" : "Configure & Search"}</span>
-          </button>
+          {isAdmin ? (
+            <button
+              onClick={() => setIsEditing(!isEditing)}
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 border border-slate-700 text-xs text-slate-300 hover:text-cyan-300 font-medium transition-all cursor-pointer"
+            >
+              <Sliders className="h-3.5 w-3.5 text-cyan-400" />
+              <span>{isEditing ? "Cancel" : "Configure & Search"}</span>
+            </button>
+          ) : (
+            <span className="text-[10px] font-mono text-slate-400 bg-slate-800/60 border border-slate-700/60 px-2 py-1 rounded-lg">
+              Transit Monitor
+            </span>
+          )}
         </div>
 
         {/* View Mode or Edit Form */}

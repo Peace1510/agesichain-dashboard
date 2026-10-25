@@ -23,8 +23,19 @@ import {
   clearManualOverride,
   getStore,
 } from "@/lib/store";
+import { auth } from "@/auth";
 
 export async function POST(request: NextRequest): Promise<NextResponse> {
+  const sessionAuth = await auth();
+  const userRole = (sessionAuth?.user as { role?: string })?.role;
+
+  if (userRole !== "ADMIN") {
+    return NextResponse.json(
+      { success: false, error: "Forbidden: Admin privileges required to override hardware buzzer." },
+      { status: 403 }
+    );
+  }
+
   let body: { action?: unknown };
   try {
     body = await request.json();

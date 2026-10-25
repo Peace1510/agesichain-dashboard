@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { getActiveSession, endActiveSession, getStore, setActiveSession } from "@/lib/store";
 import type { VaccineTierType } from "@/lib/vaccineTiers";
+import { auth } from "@/auth";
 
 /**
  * GET /api/sessions/active
@@ -67,6 +68,19 @@ export async function GET(): Promise<NextResponse> {
  */
 export async function POST(): Promise<NextResponse> {
   try {
+    const sessionAuth = await auth();
+    const userRole = (sessionAuth?.user as { role?: string })?.role;
+
+    if (userRole !== "ADMIN") {
+      return NextResponse.json(
+        {
+          success: false,
+          error: "Forbidden: Logistics Inspectors (VIEWER) cannot conclude sessions. Only Fleet Administrators have terminate privileges.",
+        },
+        { status: 403 }
+      );
+    }
+
     const active = getActiveSession();
     const dbActive =
       active ||

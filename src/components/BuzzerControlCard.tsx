@@ -19,6 +19,7 @@ interface BuzzerControlCardProps {
   status: string;
   onBuzzerAction: (action: "silence" | "rearm" | "test" | "stop_test") => Promise<void>;
   loading: boolean;
+  isAdmin?: boolean;
 }
 
 export default function BuzzerControlCard({
@@ -27,6 +28,7 @@ export default function BuzzerControlCard({
   status,
   onBuzzerAction,
   loading,
+  isAdmin = true,
 }: BuzzerControlCardProps) {
   const [testMode, setTestMode] = useState(false);
   const [pendingAction, setPendingAction] = useState<string | null>(null);
@@ -153,66 +155,78 @@ export default function BuzzerControlCard({
         </div>
       </div>
 
-      {/* Control Buttons */}
-      <div className="mt-4 pt-3 border-t border-slate-800/80 flex flex-wrap items-center gap-2.5">
-        {/* Silence Button (Always visible) */}
-        <button
-          onClick={() => handleAction("silence")}
-          disabled={loading && pendingAction === "silence"}
-          className={`flex-1 min-w-[140px] flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl font-bold text-xs transition-all cursor-pointer disabled:opacity-75 ${
-            buzzerActive
-              ? "bg-orange-600 hover:bg-orange-500 text-white shadow-lg shadow-orange-950/50 border border-orange-400 active:scale-95"
-              : "bg-slate-800 hover:bg-slate-700 text-slate-300 border border-slate-700"
-          }`}
-        >
-          {pendingAction === "silence" ? (
-            <>
-              <Loader2 className="h-4 w-4 animate-spin" />
-              <span>Silencing...</span>
-            </>
-          ) : (
-            <>
-              <BellOff className="h-4 w-4" />
-              <span>Silence Buzzer</span>
-            </>
-          )}
-        </button>
+      {/* Control Buttons (Admin) or Hardware Status (Viewer) */}
+      {isAdmin ? (
+        <div className="mt-4 pt-3 border-t border-slate-800/80 flex flex-wrap items-center gap-2.5">
+          {/* Silence Button */}
+          <button
+            onClick={() => handleAction("silence")}
+            disabled={loading && pendingAction === "silence"}
+            className={`flex-1 min-w-[140px] flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl font-bold text-xs transition-all cursor-pointer disabled:opacity-75 ${
+              buzzerActive
+                ? "bg-orange-600 hover:bg-orange-500 text-white shadow-lg shadow-orange-950/50 border border-orange-400 active:scale-95"
+                : "bg-slate-800 hover:bg-slate-700 text-slate-300 border border-slate-700"
+            }`}
+          >
+            {pendingAction === "silence" ? (
+              <>
+                <Loader2 className="h-4 w-4 animate-spin" />
+                <span>Silencing...</span>
+              </>
+            ) : (
+              <>
+                <BellOff className="h-4 w-4" />
+                <span>Silence Buzzer</span>
+              </>
+            )}
+          </button>
 
-        {/* Re-arm Button */}
-        <button
-          onClick={() => handleAction("rearm")}
-          disabled={loading && pendingAction === "rearm"}
-          title="Re-arm threshold breach detection"
-          className="flex items-center gap-1.5 px-3.5 py-2.5 rounded-xl bg-slate-900 hover:bg-slate-800 border border-slate-800 hover:border-slate-700 text-slate-300 hover:text-cyan-300 font-medium text-xs transition-all cursor-pointer disabled:opacity-75"
-        >
-          {pendingAction === "rearm" ? (
-            <>
-              <Loader2 className="h-3.5 w-3.5 animate-spin text-cyan-400" />
-              <span>Re-arming...</span>
-            </>
-          ) : (
-            <>
-              <RotateCcw className="h-3.5 w-3.5 text-cyan-400" />
-              <span>Re-Arm</span>
-            </>
-          )}
-        </button>
+          {/* Re-arm Button */}
+          <button
+            onClick={() => handleAction("rearm")}
+            disabled={loading && pendingAction === "rearm"}
+            title="Re-arm threshold breach detection"
+            className="flex items-center gap-1.5 px-3.5 py-2.5 rounded-xl bg-slate-900 hover:bg-slate-800 border border-slate-800 hover:border-slate-700 text-slate-300 hover:text-cyan-300 font-medium text-xs transition-all cursor-pointer disabled:opacity-75"
+          >
+            {pendingAction === "rearm" ? (
+              <>
+                <Loader2 className="h-3.5 w-3.5 animate-spin text-cyan-400" />
+                <span>Re-arming...</span>
+              </>
+            ) : (
+              <>
+                <RotateCcw className="h-3.5 w-3.5 text-cyan-400" />
+                <span>Re-Arm</span>
+              </>
+            )}
+          </button>
 
-        {/* Hardware Test Button */}
-        <button
-          onClick={handleTestToggle}
-          disabled={loading && (pendingAction === "test" || pendingAction === "stop_test")}
-          title="Send test signal to physical buzzer GPIO 32"
-          className={`flex items-center gap-1.5 px-3.5 py-2.5 rounded-xl font-medium text-xs transition-all cursor-pointer disabled:opacity-75 border ${
-            testMode
-              ? "bg-red-950/80 text-red-200 border-red-500 animate-pulse"
-              : "bg-slate-900 hover:bg-slate-800 border-slate-800 text-slate-300 hover:text-amber-300"
-          }`}
-        >
-          <Radio className="h-3.5 w-3.5 text-amber-400" />
-          <span>{testMode ? "Stop Test" : "Test Kit Buzzer"}</span>
-        </button>
-      </div>
+          {/* Hardware Test Button */}
+          <button
+            onClick={handleTestToggle}
+            disabled={loading && (pendingAction === "test" || pendingAction === "stop_test")}
+            title="Send test signal to physical buzzer GPIO 32"
+            className={`flex items-center gap-1.5 px-3.5 py-2.5 rounded-xl font-medium text-xs transition-all cursor-pointer disabled:opacity-75 border ${
+              testMode
+                ? "bg-red-950/80 text-red-200 border-red-500 animate-pulse"
+                : "bg-slate-900 hover:bg-slate-800 border-slate-800 text-slate-300 hover:text-amber-300"
+            }`}
+          >
+            <Radio className="h-3.5 w-3.5 text-amber-400" />
+            <span>{testMode ? "Stop Test" : "Test Kit Buzzer"}</span>
+          </button>
+        </div>
+      ) : (
+        <div className="mt-4 pt-3 border-t border-slate-800/80 flex items-center justify-between text-[11px] text-slate-400">
+          <span className="flex items-center gap-1.5">
+            <Radio className="h-3.5 w-3.5 text-cyan-400" />
+            <span>Hardware Remote:</span>
+          </span>
+          <span className="font-mono text-cyan-300 font-semibold">
+            {buzzerActive ? "⚠ Alarm Active on GPIO 32" : "✓ Nominal (Cloud Automated)"}
+          </span>
+        </div>
+      )}
     </div>
   );
 }
