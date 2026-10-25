@@ -21,7 +21,9 @@ import {
   FileText,
   X,
   RefreshCw,
+  Sparkles,
 } from "lucide-react";
+import SessionAiSummaryModal from "./SessionAiSummaryModal";
 import {
   ResponsiveContainer,
   LineChart,
@@ -94,6 +96,9 @@ export default function SessionHistoryView({ onBack }: SessionHistoryViewProps) 
   const [selectedSessionId, setSelectedSessionId] = useState<string | null>(null);
   const [detailedSession, setDetailedSession] = useState<DetailedSession | null>(null);
   const [detailLoading, setDetailLoading] = useState(false);
+
+  // Selected session for AI summary modal
+  const [aiSummarySessionId, setAiSummarySessionId] = useState<string | null>(null);
 
   const fetchSessions = async () => {
     setLoading(true);
@@ -416,15 +421,27 @@ export default function SessionHistoryView({ onBack }: SessionHistoryViewProps) 
                     </span>
                   </div>
 
-                  {/* Action: Inspect */}
-                  <button
-                    type="button"
-                    onClick={() => handleInspectSession(session.id)}
-                    className="px-4 py-2.5 rounded-xl bg-slate-800/80 hover:bg-cyan-950/60 border border-slate-700 hover:border-cyan-500/50 text-slate-200 hover:text-cyan-300 text-xs font-semibold flex items-center gap-2 shadow transition-all cursor-pointer"
-                  >
-                    <FileText className="h-3.5 w-3.5" />
-                    <span>View Audit Logs</span>
-                  </button>
+                  {/* Actions: AI Summarize + View Audit Logs */}
+                  <div className="flex items-center gap-2">
+                    <button
+                      type="button"
+                      onClick={() => setAiSummarySessionId(session.id)}
+                      className="px-3.5 py-2.5 rounded-xl bg-gradient-to-r from-cyan-950/90 to-blue-950/90 hover:from-cyan-900 hover:to-blue-900 border border-cyan-500/50 hover:border-cyan-400 text-cyan-200 hover:text-white text-xs font-bold flex items-center gap-1.5 shadow-md shadow-cyan-950/60 transition-all cursor-pointer group"
+                      title="Generate non-technical AI summary for this trip"
+                    >
+                      <Sparkles className="h-3.5 w-3.5 text-cyan-400 group-hover:scale-110 transition-transform animate-pulse" />
+                      <span>Summarize</span>
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={() => handleInspectSession(session.id)}
+                      className="px-3.5 py-2.5 rounded-xl bg-slate-800/80 hover:bg-slate-700/80 border border-slate-700 hover:border-slate-600 text-slate-200 hover:text-white text-xs font-semibold flex items-center gap-1.5 shadow transition-all cursor-pointer"
+                    >
+                      <FileText className="h-3.5 w-3.5 text-slate-400" />
+                      <span>View Audit Logs</span>
+                    </button>
+                  </div>
                 </div>
               </div>
             );
@@ -457,15 +474,26 @@ export default function SessionHistoryView({ onBack }: SessionHistoryViewProps) 
 
               <div className="flex items-center gap-2">
                 {detailedSession && (
-                  <button
-                    type="button"
-                    onClick={() => exportSessionJson(detailedSession)}
-                    className="p-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 border border-slate-700 text-slate-300 text-xs flex items-center gap-1.5 transition-colors cursor-pointer"
-                    title="Export Audit JSON"
-                  >
-                    <Download className="h-4 w-4" />
-                    <span className="hidden sm:inline">Export Audit</span>
-                  </button>
+                  <>
+                    <button
+                      type="button"
+                      onClick={() => setAiSummarySessionId(detailedSession.id)}
+                      className="p-2.5 rounded-xl bg-gradient-to-r from-cyan-950/90 to-blue-950/90 hover:from-cyan-900 hover:to-blue-900 border border-cyan-500/50 text-cyan-200 hover:text-white text-xs font-bold flex items-center gap-1.5 transition-colors cursor-pointer"
+                      title="Generate AI Trip Summary"
+                    >
+                      <Sparkles className="h-4 w-4 text-cyan-400 animate-pulse" />
+                      <span className="hidden sm:inline">Summarize</span>
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => exportSessionJson(detailedSession)}
+                      className="p-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 border border-slate-700 text-slate-300 text-xs flex items-center gap-1.5 transition-colors cursor-pointer"
+                      title="Export Audit JSON"
+                    >
+                      <Download className="h-4 w-4" />
+                      <span className="hidden sm:inline">Export Audit</span>
+                    </button>
+                  </>
                 )}
                 <button
                   type="button"
@@ -601,6 +629,14 @@ export default function SessionHistoryView({ onBack }: SessionHistoryViewProps) 
             ) : null}
           </div>
         </div>
+      )}
+
+      {/* AI SUMMARY MODAL FOR NON-TECHNICAL PERSON */}
+      {aiSummarySessionId && (
+        <SessionAiSummaryModal
+          sessionId={aiSummarySessionId}
+          onClose={() => setAiSummarySessionId(null)}
+        />
       )}
     </div>
   );
