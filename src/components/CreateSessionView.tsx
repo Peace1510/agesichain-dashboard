@@ -9,6 +9,7 @@ import {
   Clock,
   Sparkles,
   ArrowRight,
+  ArrowLeft,
   AlertCircle,
   History,
   CheckCircle2,
@@ -29,12 +30,15 @@ import {
 interface CreateSessionViewProps {
   onSessionCreated: () => void;
   onOpenHistory: () => void;
+  onBack?: () => void;
 }
 
 export default function CreateSessionView({
   onSessionCreated,
   onOpenHistory,
+  onBack,
 }: CreateSessionViewProps) {
+
   const [selectedTier, setSelectedTier] = useState<VaccineTierType>("STANDARD_REFRIGERATED");
   const [vaccineName, setVaccineName] = useState("DPT Inactivated Vaccine");
   const [batchNumber, setBatchNumber] = useState("BAT-2026-0000");
@@ -154,9 +158,19 @@ export default function CreateSessionView({
 
   return (
     <div className="w-full max-w-5xl mx-auto space-y-8 animate-in fade-in duration-300">
-      {/* Top Banner & History Toggle */}
+      {/* Top Banner & Navigation */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 p-6 glass rounded-3xl border border-white/10">
         <div className="flex items-center gap-4">
+          {onBack && (
+            <button
+              type="button"
+              onClick={onBack}
+              title="Return to Dashboard"
+              className="p-3 rounded-2xl bg-slate-900/90 hover:bg-slate-800 border border-slate-700/80 hover:border-cyan-500/50 text-slate-300 hover:text-cyan-300 transition-all cursor-pointer group flex-shrink-0"
+            >
+              <ArrowLeft className="h-5 w-5 group-hover:-translate-x-0.5 transition-transform" />
+            </button>
+          )}
           <div className="h-12 w-12 rounded-2xl bg-cyan-500/10 border border-cyan-500/30 flex items-center justify-center text-cyan-400 glow-accent flex-shrink-0">
             <ThermometerSnowflake className="h-6 w-6" />
           </div>
@@ -173,15 +187,28 @@ export default function CreateSessionView({
           </div>
         </div>
 
-        <button
-          type="button"
-          onClick={onOpenHistory}
-          className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-slate-900/90 hover:bg-slate-800 border border-slate-700/80 hover:border-cyan-500/50 text-slate-200 text-xs font-semibold shadow-md transition-all cursor-pointer group flex-shrink-0"
-        >
-          <History className="h-4 w-4 text-cyan-400 group-hover:rotate-[-20deg] transition-transform" />
-          <span>View Session History & Audits</span>
-        </button>
+        <div className="flex items-center gap-2 flex-shrink-0">
+          {onBack && (
+            <button
+              type="button"
+              onClick={onBack}
+              className="inline-flex items-center gap-2 px-3.5 py-2.5 rounded-xl bg-slate-900/90 hover:bg-slate-800 border border-slate-700/80 hover:border-slate-600 text-slate-300 text-xs font-semibold shadow-md transition-all cursor-pointer group"
+            >
+              <ArrowLeft className="h-4 w-4 text-cyan-400 group-hover:-translate-x-0.5 transition-transform" />
+              <span>Back to Dashboard</span>
+            </button>
+          )}
+          <button
+            type="button"
+            onClick={onOpenHistory}
+            className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-slate-900/90 hover:bg-slate-800 border border-slate-700/80 hover:border-cyan-500/50 text-slate-200 text-xs font-semibold shadow-md transition-all cursor-pointer group flex-shrink-0"
+          >
+            <History className="h-4 w-4 text-cyan-400 group-hover:rotate-[-20deg] transition-transform" />
+            <span>View Session History & Audits</span>
+          </button>
+        </div>
       </div>
+
 
       {error && (
         <div className="p-4 rounded-2xl bg-red-950/40 border border-red-500/40 text-red-300 text-xs flex items-center gap-3">

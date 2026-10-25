@@ -54,7 +54,7 @@ export default function ColdChainDashboardPage() {
 
   // Session state
   const [activeSession, setActiveSession] = useState<ActiveSessionInfo | null>(null);
-  const [viewMode, setViewMode] = useState<ViewMode>("CREATE_SESSION");
+  const [viewMode, setViewMode] = useState<ViewMode>("DASHBOARD");
   const [isEndModalOpen, setIsEndModalOpen] = useState<boolean>(false);
 
   const isMountedRef = useRef(true);
@@ -98,10 +98,8 @@ export default function ColdChainDashboardPage() {
         const data = await res.json();
         if (data.activeSession) {
           setActiveSession(data.activeSession);
-          setViewMode("DASHBOARD");
         } else {
           setActiveSession(null);
-          setViewMode("CREATE_SESSION");
         }
       } catch (e) {
         console.error("Failed to check active session on init:", e);
@@ -109,6 +107,7 @@ export default function ColdChainDashboardPage() {
     };
     initSession();
   }, []);
+
 
   // Silence, re-arm, or test the buzzer from the dashboard
   const handleBuzzerControl = async (action: "silence" | "rearm" | "test" | "stop_test") => {
@@ -220,26 +219,21 @@ export default function ColdChainDashboardPage() {
       {/* 1. VIEW MODE ROUTING: HISTORY */}
       {viewMode === "HISTORY" && (
         <SessionHistoryView
-          onBack={() => {
-            if (activeSession) {
-              setViewMode("DASHBOARD");
-            } else {
-              setViewMode("CREATE_SESSION");
-            }
-          }}
+          onBack={() => setViewMode("DASHBOARD")}
         />
       )}
 
       {/* 2. VIEW MODE ROUTING: CREATE SESSION LAUNCHPAD */}
-      {viewMode === "CREATE_SESSION" && !activeSession && (
+      {viewMode === "CREATE_SESSION" && (
         <CreateSessionView
           onSessionCreated={handleSessionCreated}
           onOpenHistory={() => setViewMode("HISTORY")}
+          onBack={() => setViewMode("DASHBOARD")}
         />
       )}
 
       {/* 3. VIEW MODE ROUTING: LIVE ACTIVE DASHBOARD */}
-      {(viewMode === "DASHBOARD" || activeSession) && viewMode !== "HISTORY" && (
+      {viewMode === "DASHBOARD" && (
         <>
           {/* HEADER */}
           <ShipmentHeader
@@ -252,7 +246,9 @@ export default function ColdChainDashboardPage() {
             onRefresh={fetchTelemetry}
             onEndSession={() => setIsEndModalOpen(true)}
             onOpenHistory={() => setViewMode("HISTORY")}
+            onOpenCreateSession={() => setViewMode("CREATE_SESSION")}
           />
+
 
           {/* DEVICE DISCONNECTED BANNER */}
           {!isConnected && (

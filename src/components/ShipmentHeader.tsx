@@ -16,6 +16,7 @@ import {
   Archive,
   History,
   AlertTriangle,
+  PlusCircle,
 } from "lucide-react";
 
 interface ShipmentHeaderProps {
@@ -28,6 +29,7 @@ interface ShipmentHeaderProps {
   onRefresh: () => void;
   onEndSession?: () => void;
   onOpenHistory?: () => void;
+  onOpenCreateSession?: () => void;
   className?: string;
 }
 
@@ -41,8 +43,10 @@ export default function ShipmentHeader({
   onRefresh,
   onEndSession,
   onOpenHistory,
+  onOpenCreateSession,
   className,
 }: ShipmentHeaderProps) {
+
   return (
     <header className={cn("glass rounded-2xl p-6 relative overflow-hidden", className)}>
       {/* Top accent gradient line */}
@@ -115,6 +119,18 @@ export default function ShipmentHeader({
             </button>
           )}
 
+          {/* Launch New Session Button */}
+          {onOpenCreateSession && !activeSession && (
+            <button
+              onClick={onOpenCreateSession}
+              title="Configure and Launch New Transit Session"
+              className="px-3.5 py-2 rounded-xl bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-500 hover:to-blue-500 text-white text-xs font-bold flex items-center gap-1.5 shadow-md shadow-cyan-950/40 hover:shadow-cyan-500/20 transition-all cursor-pointer"
+            >
+              <PlusCircle className="h-3.5 w-3.5" />
+              <span>Launch Session</span>
+            </button>
+          )}
+
           {/* End Session Button */}
           {onEndSession && activeSession && (
             <button
@@ -126,6 +142,7 @@ export default function ShipmentHeader({
               <span>End Session</span>
             </button>
           )}
+
 
           {/* Live telemetry heartbeat */}
           <div className="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-slate-900/80 border border-slate-800 text-xs">
