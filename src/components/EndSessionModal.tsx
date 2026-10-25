@@ -68,57 +68,59 @@ export default function EndSessionModal({
 
         {/* Warning Icon */}
         <div className="flex items-center gap-3 mb-5">
-          <div className="h-12 w-12 rounded-2xl bg-amber-500/10 border border-amber-500/30 flex items-center justify-center text-amber-400 glow-warning">
+          <div className="h-12 w-12 rounded-2xl bg-amber-500/10 border border-amber-500/30 flex items-center justify-center text-amber-400">
             <Archive className="h-6 w-6" />
           </div>
           <div>
             <h2 className="text-xl font-bold text-white tracking-tight">
               Conclude Transit Session
             </h2>
-            <p className="text-xs text-slate-400 font-mono">
-              Session Code: <span className="text-cyan-300 font-bold">{session.sessionCode}</span>
+            <p className="text-xs text-neutral-400 font-mono">
+              Session Code: <span className="text-neutral-200 font-bold">{session.sessionCode}</span>
             </p>
           </div>
         </div>
 
-        <p className="text-xs sm:text-sm text-slate-300 mb-5 leading-relaxed">
+        <p className="text-xs sm:text-sm text-neutral-300 mb-5 leading-relaxed">
           Ending this session will finalize all telemetry logging, compute cumulative kinetic viability,
           and permanently store this shipment’s complete audit history in PostgreSQL.
         </p>
 
         {/* Audit Preview Card */}
-        <div className="p-4 rounded-2xl bg-slate-900/80 border border-slate-800 space-y-3 mb-6">
+        <div className="p-4 rounded-2xl bg-[#141518] border border-neutral-800 space-y-3 mb-6">
           <div className="flex justify-between items-center text-xs">
-            <span className="text-slate-400">Vaccine / Payload:</span>
-            <span className="font-semibold text-slate-200">{session.vaccineName}</span>
+            <span className="text-neutral-400">Vaccine / Payload:</span>
+            <span className="font-semibold text-neutral-200">{session.vaccineName}</span>
           </div>
           <div className="flex justify-between items-center text-xs">
-            <span className="text-slate-400">Classification Tier:</span>
-            <span className="font-mono text-cyan-300 font-medium">{session.vaccineTier}</span>
+            <span className="text-neutral-400">Classification Tier:</span>
+            <span className="font-mono text-neutral-200 font-medium">{session.vaccineTier}</span>
           </div>
           <div className="flex justify-between items-center text-xs">
-            <span className="text-slate-400">Allowed Envelope:</span>
-            <span className="font-mono text-slate-300">{session.minTemp}°C to {session.maxTemp}°C</span>
+            <span className="text-neutral-400">Allowed Envelope:</span>
+            <span className="font-mono text-neutral-300">{session.minTemp}°C to {session.maxTemp}°C</span>
           </div>
           <div className="flex justify-between items-center text-xs">
-            <span className="text-slate-400">Readings Recorded:</span>
+            <span className="text-neutral-400">Readings Recorded:</span>
             <span className="font-mono text-emerald-400 font-bold">{session.totalReadings} points</span>
           </div>
           <div className="flex justify-between items-center text-xs">
-            <span className="text-slate-400">Thermal Excursions:</span>
+            <span className="text-neutral-400">Thermal Excursions:</span>
             <span className={`font-mono font-bold ${session.excursionCount > 0 ? "text-amber-400" : "text-emerald-400"}`}>
               {session.excursionCount} events
             </span>
           </div>
-          <div className="flex justify-between items-center text-xs border-t border-slate-800 pt-2.5">
-            <span className="text-slate-400">Final Potency Viability:</span>
-            <span className="font-mono font-bold text-cyan-300">{currentViability.toFixed(2)}%</span>
+          <div className="flex justify-between items-center text-xs border-t border-neutral-800 pt-2.5">
+            <span className="text-neutral-400">Final Potency Viability:</span>
+            <span className={`font-mono font-bold ${currentViability < 80 ? "text-rose-400" : "text-emerald-400"}`}>
+              {currentViability.toFixed(2)}%
+            </span>
           </div>
         </div>
 
         {error && (
-          <div className="mb-4 p-3 rounded-xl bg-red-950/40 border border-red-500/40 text-red-300 text-xs flex items-center gap-2">
-            <AlertTriangle className="h-4 w-4 text-red-400 flex-shrink-0" />
+          <div className="mb-4 p-3 rounded-xl bg-rose-950/40 border border-rose-500/40 text-rose-300 text-xs flex items-center gap-2">
+            <AlertTriangle className="h-4 w-4 text-rose-400 flex-shrink-0" />
             <span>{error}</span>
           </div>
         )}

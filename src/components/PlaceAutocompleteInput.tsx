@@ -145,9 +145,9 @@ export default function PlaceAutocompleteInput({
     <div ref={containerRef} className="relative">
       <label
         htmlFor={id}
-        className="text-xs font-semibold text-slate-300 flex items-center gap-1 mb-1.5"
+        className="text-xs font-semibold text-neutral-300 flex items-center gap-1 mb-1.5"
       >
-        {icon ?? <MapPin className="h-3 w-3 text-cyan-400" />}
+        {icon ?? <MapPin className="h-3 w-3 text-neutral-400" />}
         {label}
       </label>
 
@@ -161,19 +161,19 @@ export default function PlaceAutocompleteInput({
           onChange={handleChange}
           onFocus={() => predictions.length > 0 && setOpen(true)}
           placeholder={placeholder ?? "Start typing a location…"}
-          className="w-full pl-3.5 pr-10 py-2.5 bg-slate-900/80 border border-slate-700/80 rounded-xl text-sm text-slate-100 placeholder-slate-500 focus:outline-none focus:border-cyan-400 transition-colors"
+          className="w-full pl-3.5 pr-10 py-2.5 bg-neutral-950/80 border border-neutral-800 rounded-xl text-sm text-neutral-100 placeholder-neutral-500 focus:outline-none focus:border-neutral-500 transition-colors"
         />
 
         {/* Right icon: spinner / clear */}
         <div className="absolute right-3 top-1/2 -translate-y-1/2 flex items-center gap-1 pointer-events-none">
           {(loading || resolving) && (
-            <Loader2 className="h-4 w-4 text-cyan-400 animate-spin pointer-events-none" />
+            <Loader2 className="h-4 w-4 text-neutral-400 animate-spin pointer-events-none" />
           )}
           {!loading && !resolving && inputText && (
             <button
               type="button"
               onClick={handleClear}
-              className="pointer-events-auto text-slate-500 hover:text-slate-300 transition-colors"
+              className="pointer-events-auto text-neutral-500 hover:text-neutral-300 transition-colors"
               aria-label="Clear"
             >
               <X className="h-3.5 w-3.5" />
@@ -186,7 +186,7 @@ export default function PlaceAutocompleteInput({
       {open && predictions.length > 0 && (
         <ul
           role="listbox"
-          className="absolute z-50 mt-1.5 w-full bg-slate-900 border border-slate-700/80 rounded-xl shadow-2xl overflow-hidden max-h-52 overflow-y-auto"
+          className="absolute z-50 mt-1.5 w-full bg-[#141518] border border-neutral-800 rounded-xl shadow-2xl overflow-hidden max-h-52 overflow-y-auto"
         >
           {predictions.map((pred) => (
             <li
@@ -197,10 +197,10 @@ export default function PlaceAutocompleteInput({
                 e.preventDefault(); // prevent input blur before click
                 handleSelect(pred);
               }}
-              className="flex items-start gap-2.5 px-4 py-3 cursor-pointer hover:bg-slate-800/80 transition-colors border-b border-slate-800/60 last:border-0"
+              className="flex items-start gap-2.5 px-4 py-3 cursor-pointer hover:bg-neutral-850 transition-colors border-b border-neutral-800/60 last:border-0"
             >
-              <MapPin className="h-3.5 w-3.5 text-cyan-500 mt-0.5 flex-shrink-0" />
-              <span className="text-xs text-slate-200 leading-snug">{pred.description}</span>
+              <MapPin className="h-3.5 w-3.5 text-neutral-400 mt-0.5 flex-shrink-0" />
+              <span className="text-xs text-neutral-200 leading-snug">{pred.description}</span>
             </li>
           ))}
         </ul>

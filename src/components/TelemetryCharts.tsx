@@ -88,26 +88,26 @@ export default function TelemetryCharts({ readings, className }: TelemetryCharts
   return (
     <div className={cn("flex flex-col gap-5", className)}>
       {/* Sub-header with selector tabs */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-2 border-b border-white/[0.04]">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-2 border-b border-neutral-800/60">
         <div className="flex items-center gap-2">
-          <Activity className="h-4 w-4 text-blue-400" />
-          <h3 className="text-xs font-bold uppercase tracking-wider text-slate-300">
+          <Activity className="h-4 w-4 text-neutral-300" />
+          <h3 className="text-xs font-bold uppercase tracking-wider text-neutral-200">
             Real-Time Kinetic Curves
           </h3>
-          <span className="text-[11px] text-slate-500 mono bg-slate-900/60 px-2 py-0.5 rounded-full border border-white/[0.04]">
+          <span className="text-[11px] text-neutral-400 mono bg-neutral-900/80 px-2 py-0.5 rounded-full border border-neutral-800">
             {data.length} telemetry points
           </span>
         </div>
 
         {/* Tab switcher */}
-        <div className="flex items-center gap-1 bg-slate-950/70 p-1 rounded-xl border border-white/[0.06] self-start sm:self-auto">
+        <div className="flex items-center gap-1 bg-neutral-900/80 p-1 rounded-xl border border-neutral-800 self-start sm:self-auto">
           <button
             onClick={() => setActiveTab("both")}
             className={cn(
               "px-3 py-1 rounded-lg text-xs font-medium transition-all cursor-pointer",
               activeTab === "both"
-                ? "bg-blue-600 text-white shadow-sm"
-                : "text-slate-400 hover:text-slate-200"
+                ? "bg-neutral-100 text-neutral-900 font-bold shadow-sm"
+                : "text-neutral-400 hover:text-neutral-200"
             )}
           >
             Combined View
@@ -117,8 +117,8 @@ export default function TelemetryCharts({ readings, className }: TelemetryCharts
             className={cn(
               "px-3 py-1 rounded-lg text-xs font-medium transition-all cursor-pointer",
               activeTab === "temperature"
-                ? "bg-amber-600 text-white shadow-sm"
-                : "text-slate-400 hover:text-slate-200"
+                ? "bg-amber-500 text-neutral-950 font-bold shadow-sm"
+                : "text-neutral-400 hover:text-neutral-200"
             )}
           >
             Temperature (°C)
@@ -128,8 +128,8 @@ export default function TelemetryCharts({ readings, className }: TelemetryCharts
             className={cn(
               "px-3 py-1 rounded-lg text-xs font-medium transition-all cursor-pointer",
               activeTab === "viability"
-                ? "bg-emerald-600 text-white shadow-sm"
-                : "text-slate-400 hover:text-slate-200"
+                ? "bg-emerald-500 text-neutral-950 font-bold shadow-sm"
+                : "text-neutral-400 hover:text-neutral-200"
             )}
           >
             Viability (%)
@@ -192,17 +192,17 @@ export default function TelemetryCharts({ readings, className }: TelemetryCharts
                         const pt = payload[0].payload as ChartPoint;
                         const isExcursion = pt.temperature > 8.0 || pt.temperature < 2.0;
                         return (
-                          <div className="glass p-3 rounded-xl border border-slate-700 text-xs shadow-2xl">
-                            <p className="mono font-semibold text-slate-400 mb-1">{pt.timeStr}</p>
+                          <div className="bg-[#141518]/95 backdrop-blur-md p-3 rounded-xl border border-neutral-800 text-xs shadow-2xl">
+                            <p className="mono font-semibold text-neutral-400 mb-1">{pt.timeStr}</p>
                             <p className="font-bold text-amber-300 text-sm">
                               Temp: {pt.temperature} °C
                             </p>
-                            <p className="text-slate-400 text-[11px]">Humidity: {pt.humidity}%</p>
-                            <p className="text-slate-400 text-[11px] mono">
+                            <p className="text-neutral-400 text-[11px]">Humidity: {pt.humidity}%</p>
+                            <p className="text-neutral-400 text-[11px] mono">
                               k: {pt.kRate} hr⁻¹
                             </p>
                             {isExcursion && (
-                              <p className="text-red-400 font-semibold mt-1 text-[11px]">
+                              <p className="text-rose-400 font-semibold mt-1 text-[11px]">
                                 ⚠ Thermal Excursion Detected
                               </p>
                             )}
@@ -237,12 +237,12 @@ export default function TelemetryCharts({ readings, className }: TelemetryCharts
                     />
                     <ReferenceLine
                       y={2.0}
-                      stroke="#06b6d4"
+                      stroke="#94a3b8"
                       strokeDasharray="3 3"
                       label={{
                         value: "Min Safe (+2°C)",
                         position: "insideBottomRight",
-                        fill: "#06b6d4",
+                        fill: "#94a3b8",
                         fontSize: 9,
                         fontFamily: "JetBrains Mono",
                       }}
@@ -308,17 +308,17 @@ export default function TelemetryCharts({ readings, className }: TelemetryCharts
                         const pt = payload[0].payload as ChartPoint;
                         const isUnder = pt.viabilityPct < V_THRESHOLD * 100;
                         return (
-                          <div className="glass p-3 rounded-xl border border-slate-700 text-xs shadow-2xl">
-                            <p className="mono font-semibold text-slate-400 mb-1">{pt.timeStr}</p>
+                          <div className="bg-[#141518]/95 backdrop-blur-md p-3 rounded-xl border border-neutral-800 text-xs shadow-2xl">
+                            <p className="mono font-semibold text-neutral-400 mb-1">{pt.timeStr}</p>
                             <p
                               className={cn(
                                 "font-bold text-sm",
-                                isUnder ? "text-red-400" : "text-emerald-300"
+                                isUnder ? "text-rose-400" : "text-emerald-300"
                               )}
                             >
                               Viability: {pt.viabilityPct}%
                             </p>
-                            <p className="text-slate-400 text-[11px] mono">
+                            <p className="text-neutral-400 text-[11px] mono">
                               Margin to Threshold: {(pt.viabilityPct - 80).toFixed(2)} pp
                             </p>
                           </div>

@@ -235,17 +235,17 @@ export default function DestinationConfigCard({
   return (
     <div className="glass rounded-2xl p-5 border border-white/[0.08] shadow-lg relative overflow-hidden flex flex-col justify-between">
       {/* Top accent line */}
-      <div className="absolute inset-x-0 top-0 h-[2px] bg-gradient-to-r from-emerald-500 via-blue-500 to-indigo-500" />
+      <div className="absolute inset-x-0 top-0 h-[2px] bg-gradient-to-r from-emerald-500/60 via-neutral-700/40 to-emerald-500/60" />
 
       {/* Header */}
       <div>
-        <div className="flex items-center justify-between pb-3.5 border-b border-white/[0.06]">
+        <div className="flex items-center justify-between pb-3.5 border-b border-neutral-800">
           <div className="flex items-center gap-2.5">
             <div className="h-8 w-8 rounded-lg bg-emerald-500/10 border border-emerald-500/25 flex items-center justify-center text-emerald-400">
               <Truck className="h-4 w-4" />
             </div>
             <div>
-              <h3 className="text-sm font-bold text-slate-100 flex items-center gap-2">
+              <h3 className="text-sm font-bold text-neutral-100 flex items-center gap-2">
                 Destination & Route Planner
                 {savedSuccess && (
                   <span className="text-[10px] font-mono text-emerald-300 bg-emerald-950/80 border border-emerald-800/60 px-2 py-0.5 rounded-full flex items-center gap-1 animate-in fade-in">
@@ -253,7 +253,7 @@ export default function DestinationConfigCard({
                   </span>
                 )}
               </h3>
-              <p className="text-[11px] text-slate-400">
+              <p className="text-[11px] text-neutral-400">
                 Place search & Real-Time Road Traffic ETA
               </p>
             </div>
@@ -262,13 +262,13 @@ export default function DestinationConfigCard({
           {isAdmin ? (
             <button
               onClick={() => setIsEditing(!isEditing)}
-              className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-slate-900/80 hover:bg-slate-800 border border-white/[0.08] hover:border-white/[0.16] text-xs text-slate-300 hover:text-white font-medium transition-all cursor-pointer shadow-sm active:scale-95"
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-neutral-900 hover:bg-neutral-800 border border-neutral-800 hover:border-neutral-700 text-xs text-neutral-300 hover:text-white font-medium transition-all cursor-pointer shadow-sm active:scale-95"
             >
-              <Sliders className="h-3.5 w-3.5 text-blue-400" />
+              <Sliders className="h-3.5 w-3.5 text-neutral-400" />
               <span>{isEditing ? "Cancel" : "Configure & Search"}</span>
             </button>
           ) : (
-            <span className="text-[10px] font-mono text-slate-400 bg-slate-900/80 border border-white/[0.06] px-2.5 py-1 rounded-full">
+            <span className="text-[10px] font-mono text-neutral-400 bg-neutral-900 border border-neutral-800 px-2.5 py-1 rounded-full">
               Transit Monitor
             </span>
           )}
@@ -280,18 +280,18 @@ export default function DestinationConfigCard({
             {/* Route Summary Row */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-2.5">
               {/* Origin */}
-              <div className="p-3 rounded-xl bg-slate-900/50 border border-white/[0.06]">
-                <span className="text-[10px] uppercase font-bold text-slate-400 flex items-center gap-1">
-                  <MapPin className="h-3 w-3 text-blue-400" /> Origin
+              <div className="p-3 rounded-xl bg-neutral-900/70 border border-neutral-800">
+                <span className="text-[10px] uppercase font-bold text-neutral-400 flex items-center gap-1">
+                  <MapPin className="h-3 w-3 text-neutral-400" /> Origin
                 </span>
-                <p className="mt-1 text-xs font-semibold text-slate-200 truncate">
+                <p className="mt-1 text-xs font-semibold text-neutral-200 truncate">
                   {meta.origin !== "—" ? meta.origin : "Not specified"}
                 </p>
               </div>
 
               {/* Destination */}
-              <div className="p-3 rounded-xl bg-slate-900/50 border border-white/[0.06]">
-                <span className="text-[10px] uppercase font-bold text-slate-400 flex items-center gap-1">
+              <div className="p-3 rounded-xl bg-neutral-900/70 border border-neutral-800">
+                <span className="text-[10px] uppercase font-bold text-neutral-400 flex items-center gap-1">
                   <Truck className="h-3 w-3 text-emerald-400" /> Destination
                 </span>
                 <p className="mt-1 text-xs font-semibold text-emerald-300 truncate">
@@ -300,8 +300,8 @@ export default function DestinationConfigCard({
               </div>
 
               {/* Transit ETA */}
-              <div className="p-3 rounded-xl bg-slate-900/50 border border-white/[0.06]">
-                <span className="text-[10px] uppercase font-bold text-slate-400 flex items-center gap-1">
+              <div className="p-3 rounded-xl bg-neutral-900/70 border border-neutral-800">
+                <span className="text-[10px] uppercase font-bold text-neutral-400 flex items-center gap-1">
                   <Clock className="h-3 w-3 text-amber-400" /> Road ETA
                 </span>
                 <p className="mt-1 text-xs font-mono font-bold text-amber-300 flex items-center gap-1.5">
@@ -311,7 +311,7 @@ export default function DestinationConfigCard({
                       : `${etaHours.toFixed(1)} hrs`}
                   </span>
                   {meta.routeDistanceKm && (
-                    <span className="text-[10px] text-slate-400 font-normal">
+                    <span className="text-[10px] text-neutral-400 font-normal">
                       ({meta.routeDistanceKm} km)
                     </span>
                   )}
@@ -320,13 +320,13 @@ export default function DestinationConfigCard({
             </div>
 
             {/* Kinetic Explanation Banner */}
-            <div className="p-2.5 rounded-xl bg-blue-950/20 border border-blue-800/30 text-[11px] text-slate-300 flex items-center gap-2">
-              <Info className="h-3.5 w-3.5 text-blue-400 flex-shrink-0" />
+            <div className="p-2.5 rounded-xl bg-neutral-900/80 border border-neutral-800 text-[11px] text-neutral-300 flex items-center gap-2">
+              <Info className="h-3.5 w-3.5 text-neutral-400 flex-shrink-0" />
               <div className="leading-tight truncate">
-                <span className="font-semibold text-blue-200">
+                <span className="font-semibold text-neutral-200">
                   Viability Buffer:
                 </span>{" "}
-                <span className="text-slate-300">
+                <span className="text-neutral-300">
                   Shelf-life ({timeToSpoil !== null ? timeToSpoil.toFixed(1) + "h" : "calc..."}) vs. ETA ({etaHours.toFixed(1)}h). Buffer:{" "}
                   {timeToSpoil !== null ? (
                     <strong className={timeToSpoil - etaHours > 1 ? "text-emerald-300" : timeToSpoil - etaHours > 0 ? "text-amber-300" : "text-rose-400"}>
@@ -341,8 +341,8 @@ export default function DestinationConfigCard({
           <form onSubmit={handleSubmit} className="mt-4 flex flex-col gap-4">
             {/* 1. GOOGLE MAPS PLACE SEARCH INPUT */}
             <div className="relative" ref={searchContainerRef}>
-              <label className="text-[11px] font-bold text-slate-300 uppercase tracking-wider flex items-center gap-1.5 mb-1">
-                <Search className="h-3.5 w-3.5 text-cyan-400" />
+              <label className="text-[11px] font-bold text-neutral-300 uppercase tracking-wider flex items-center gap-1.5 mb-1">
+                <Search className="h-3.5 w-3.5 text-neutral-400" />
                 <span>Search Destination (Google Maps Search)</span>
               </label>
 
@@ -361,10 +361,10 @@ export default function DestinationConfigCard({
                     }
                   }}
                   placeholder="Search any hospital, city, or address (e.g. Lilavati Hospital Mumbai, AIIMS Delhi)..."
-                  className="w-full pl-9 pr-24 py-2.5 rounded-xl bg-slate-950 border border-slate-700/80 text-xs text-slate-100 placeholder-slate-500 focus:outline-none focus:border-cyan-400 focus:ring-1 focus:ring-cyan-400/50 transition-all shadow-inner"
+                  className="w-full pl-9 pr-24 py-2.5 rounded-xl bg-neutral-950 border border-neutral-700 text-xs text-neutral-100 placeholder-neutral-500 focus:outline-none focus:border-neutral-400 focus:ring-1 focus:ring-neutral-400/30 transition-all shadow-inner"
                 />
 
-                <Search className="absolute left-3 h-4 w-4 text-slate-500 pointer-events-none" />
+                <Search className="absolute left-3 h-4 w-4 text-neutral-500 pointer-events-none" />
 
                 <div className="absolute right-2 flex items-center gap-1">
                   {searchQuery && (
@@ -375,7 +375,7 @@ export default function DestinationConfigCard({
                         setSearchResults([]);
                         setShowDropdown(false);
                       }}
-                      className="p-1 rounded-lg text-slate-400 hover:text-slate-200 hover:bg-slate-800"
+                      className="p-1 rounded-lg text-neutral-400 hover:text-neutral-200 hover:bg-neutral-800"
                     >
                       <X className="h-3.5 w-3.5" />
                     </button>
@@ -385,10 +385,10 @@ export default function DestinationConfigCard({
                     type="button"
                     onClick={() => performSearch(searchQuery)}
                     disabled={isSearching}
-                    className="px-2.5 py-1 rounded-lg bg-cyan-600 hover:bg-cyan-500 text-[11px] font-bold text-white transition-all flex items-center gap-1 cursor-pointer disabled:opacity-50"
+                    className="px-2.5 py-1 rounded-lg bg-neutral-100 hover:bg-white text-[11px] font-bold text-neutral-900 transition-all flex items-center gap-1 cursor-pointer disabled:opacity-50"
                   >
                     {isSearching ? (
-                      <Loader2 className="h-3 w-3 animate-spin" />
+                      <Loader2 className="h-3 w-3 animate-spin text-neutral-900" />
                     ) : (
                       "Search"
                     )}
@@ -398,15 +398,15 @@ export default function DestinationConfigCard({
 
               {/* Autocomplete Dropdown */}
               {showDropdown && searchResults.length > 0 && (
-                <div className="absolute top-full left-0 right-0 mt-1.5 z-50 rounded-xl bg-slate-950 border border-slate-800 shadow-2xl overflow-hidden divide-y divide-slate-800/60 max-h-60 overflow-y-auto backdrop-blur-xl">
+                <div className="absolute top-full left-0 right-0 mt-1.5 z-50 rounded-xl bg-[#141518] border border-neutral-800 shadow-2xl overflow-hidden divide-y divide-neutral-800 max-h-60 overflow-y-auto backdrop-blur-xl">
                   {searchResults.map((place) => (
                     <button
                       key={place.id}
                       type="button"
                       onClick={() => handleSelectPlace(place)}
-                      className="w-full text-left px-3.5 py-2.5 hover:bg-slate-800/60 transition-colors flex items-start gap-2.5 group cursor-pointer"
+                      className="w-full text-left px-3.5 py-2.5 hover:bg-neutral-800/60 transition-colors flex items-start gap-2.5 group cursor-pointer"
                     >
-                      <div className="mt-0.5 p-1 rounded-lg bg-slate-800 group-hover:bg-cyan-950 text-slate-400 group-hover:text-cyan-400 border border-slate-700/50 transition-colors flex-shrink-0">
+                      <div className="mt-0.5 p-1 rounded-lg bg-neutral-800 group-hover:bg-neutral-700 text-neutral-400 group-hover:text-neutral-200 border border-neutral-700/50 transition-colors flex-shrink-0">
                         {place.type === "hospital" ? (
                           <Building2 className="h-3.5 w-3.5" />
                         ) : (
@@ -414,13 +414,13 @@ export default function DestinationConfigCard({
                         )}
                       </div>
                       <div className="flex-1 min-w-0">
-                        <div className="text-xs font-semibold text-slate-200 group-hover:text-cyan-300 truncate">
+                        <div className="text-xs font-semibold text-neutral-200 group-hover:text-white truncate">
                           {place.name}
                         </div>
-                        <div className="text-[11px] text-slate-400 truncate mt-0.5">
+                        <div className="text-[11px] text-neutral-400 truncate mt-0.5">
                           {place.label}
                         </div>
-                        <div className="text-[10px] mono text-slate-500 mt-0.5">
+                        <div className="text-[10px] mono text-neutral-500 mt-0.5">
                           {place.lat.toFixed(4)}, {place.lng.toFixed(4)}
                         </div>
                       </div>
@@ -432,34 +432,34 @@ export default function DestinationConfigCard({
 
             {/* Quick Presets with Automatic Routing */}
             <div className="flex flex-wrap items-center gap-2 pt-1">
-              <span className="text-[11px] font-bold text-slate-400">Presets:</span>
+              <span className="text-[11px] font-bold text-neutral-400">Presets:</span>
               <button
                 type="button"
                 onClick={() => applyPreset("Serum Institute, Pune", "KEM Hospital, Pune", 1.2, 18.5284, 73.8743)}
-                className="px-2.5 py-1 rounded-lg bg-slate-800 hover:bg-slate-700 border border-slate-700 text-[11px] text-slate-300 transition-all cursor-pointer hover:border-cyan-500/50"
+                className="px-2.5 py-1 rounded-lg bg-neutral-900 hover:bg-neutral-800 border border-neutral-800 text-[11px] text-neutral-300 transition-all cursor-pointer hover:border-neutral-700"
               >
                 🏥 Pune Local
               </button>
               <button
                 type="button"
                 onClick={() => applyPreset("Cold Hub, Pune", "District Hospital, Mumbai", 3.5, 18.9822, 72.8335)}
-                className="px-2.5 py-1 rounded-lg bg-slate-800 hover:bg-slate-700 border border-slate-700 text-[11px] text-slate-300 transition-all cursor-pointer hover:border-cyan-500/50"
+                className="px-2.5 py-1 rounded-lg bg-neutral-900 hover:bg-neutral-800 border border-neutral-800 text-[11px] text-neutral-300 transition-all cursor-pointer hover:border-neutral-700"
               >
                 🚚 Pune ➔ Mumbai
               </button>
               <button
                 type="button"
                 onClick={() => applyPreset("Vaccine Depot, Pune", "AIIMS Nagpur", 9.0, 21.1458, 79.0882)}
-                className="px-2.5 py-1 rounded-lg bg-slate-800 hover:bg-slate-700 border border-slate-700 text-[11px] text-slate-300 transition-all cursor-pointer hover:border-cyan-500/50"
+                className="px-2.5 py-1 rounded-lg bg-neutral-900 hover:bg-neutral-800 border border-neutral-800 text-[11px] text-neutral-300 transition-all cursor-pointer hover:border-neutral-700"
               >
                 ✈️ Pune ➔ Nagpur
               </button>
             </div>
 
             {/* 2. REAL-TIME ROUTING & TRAFFIC ETA STATUS CARD */}
-            <div className="p-3.5 rounded-xl bg-slate-950/80 border border-slate-800 flex flex-col gap-2">
+            <div className="p-3.5 rounded-xl bg-neutral-950/80 border border-neutral-800 flex flex-col gap-2">
               <div className="flex items-center justify-between">
-                <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 flex items-center gap-1.5">
+                <span className="text-[10px] font-bold uppercase tracking-wider text-neutral-400 flex items-center gap-1.5">
                   <Route className="h-3.5 w-3.5 text-emerald-400" />
                   <span>Real-Time Traffic Driving Route</span>
                 </span>
@@ -468,7 +468,7 @@ export default function DestinationConfigCard({
                   type="button"
                   onClick={() => calculateLiveRoute(destLat, destLng, destination)}
                   disabled={calculatingRoute}
-                  className="text-[10px] text-cyan-400 hover:text-cyan-300 font-medium flex items-center gap-1 cursor-pointer disabled:opacity-50"
+                  className="text-[10px] text-neutral-300 hover:text-white font-medium flex items-center gap-1 cursor-pointer disabled:opacity-50"
                 >
                   <RotateCcw className={`h-3 w-3 ${calculatingRoute ? "animate-spin" : ""}`} />
                   <span>Recalculate</span>
@@ -476,14 +476,14 @@ export default function DestinationConfigCard({
               </div>
 
               {calculatingRoute ? (
-                <div className="py-2 flex items-center gap-2 text-xs text-cyan-300">
-                  <Loader2 className="h-4 w-4 animate-spin text-cyan-400" />
+                <div className="py-2 flex items-center gap-2 text-xs text-neutral-300">
+                  <Loader2 className="h-4 w-4 animate-spin text-neutral-400" />
                   <span>Calculating real-time road distance and traffic ETA...</span>
                 </div>
               ) : routeInfo ? (
                 <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 pt-1">
-                  <div className="p-2 rounded-lg bg-slate-900 border border-slate-800">
-                    <span className="text-[9px] uppercase font-bold text-slate-500">
+                  <div className="p-2 rounded-lg bg-neutral-900 border border-neutral-800">
+                    <span className="text-[9px] uppercase font-bold text-neutral-500">
                       Driving Distance
                     </span>
                     <p className="mono text-sm font-bold text-emerald-400">
@@ -491,8 +491,8 @@ export default function DestinationConfigCard({
                     </p>
                   </div>
 
-                  <div className="p-2 rounded-lg bg-slate-900 border border-slate-800">
-                    <span className="text-[9px] uppercase font-bold text-slate-500">
+                  <div className="p-2 rounded-lg bg-neutral-900 border border-neutral-800">
+                    <span className="text-[9px] uppercase font-bold text-neutral-500">
                       Live Driving Time
                     </span>
                     <p className="mono text-sm font-bold text-amber-300">
@@ -500,11 +500,11 @@ export default function DestinationConfigCard({
                     </p>
                   </div>
 
-                  <div className="p-2 rounded-lg bg-slate-900 border border-slate-800 col-span-2 sm:col-span-1">
-                    <span className="text-[9px] uppercase font-bold text-slate-500">
+                  <div className="p-2 rounded-lg bg-neutral-900 border border-neutral-800 col-span-2 sm:col-span-1">
+                    <span className="text-[9px] uppercase font-bold text-neutral-500">
                       Applied ETA
                     </span>
-                    <p className="mono text-sm font-bold text-cyan-300">
+                    <p className="mono text-sm font-bold text-neutral-100">
                       {eta < 1
                         ? `${Math.round(eta * 60)} mins (${eta.toFixed(2)}h)`
                         : `${eta.toFixed(1)} hrs`}
@@ -512,7 +512,7 @@ export default function DestinationConfigCard({
                   </div>
                 </div>
               ) : (
-                <div className="text-[11px] text-slate-400">
+                <div className="text-[11px] text-neutral-400">
                   Select a destination or click Recalculate to generate live highway ETA from current container position.
                 </div>
               )}
@@ -522,14 +522,14 @@ export default function DestinationConfigCard({
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               {/* Shipment Name */}
               <div>
-                <label className="text-[11px] font-bold text-slate-400 uppercase">
+                <label className="text-[11px] font-bold text-neutral-400 uppercase">
                   Cargo / Vaccine Name
                 </label>
                 <input
                   type="text"
                   value={name}
                   onChange={(e) => setName(e.target.value)}
-                  className="mt-1 w-full px-3 py-2 rounded-xl bg-slate-950 border border-slate-800 text-xs text-slate-100 focus:outline-none focus:border-cyan-500"
+                  className="mt-1 w-full px-3 py-2 rounded-xl bg-neutral-950 border border-neutral-800 text-xs text-neutral-100 focus:outline-none focus:border-neutral-500"
                   placeholder="e.g. Covishield Batch #AG-902"
                   required
                 />
@@ -537,9 +537,9 @@ export default function DestinationConfigCard({
 
               {/* Transit ETA (Hours) */}
               <div>
-                <label className="text-[11px] font-bold text-slate-400 uppercase flex items-center justify-between">
+                <label className="text-[11px] font-bold text-neutral-400 uppercase flex items-center justify-between">
                   <span>Transit ETA (Hours)</span>
-                  <span className="mono text-cyan-400 font-bold">
+                  <span className="mono text-neutral-200 font-bold">
                     {eta < 1
                       ? `${Math.round(eta * 60)} mins (${eta.toFixed(2)}h)`
                       : `${eta.toFixed(1)} hrs`}
@@ -552,21 +552,21 @@ export default function DestinationConfigCard({
                   max="168"
                   value={eta}
                   onChange={(e) => setEta(parseFloat(e.target.value) || 0.1)}
-                  className="mt-1 w-full px-3 py-2 rounded-xl bg-slate-950 border border-slate-800 text-xs text-slate-100 font-mono focus:outline-none focus:border-cyan-500"
+                  className="mt-1 w-full px-3 py-2 rounded-xl bg-neutral-950 border border-neutral-800 text-xs text-neutral-100 font-mono focus:outline-none focus:border-neutral-500"
                   required
                 />
               </div>
 
               {/* Origin Facility */}
               <div>
-                <label className="text-[11px] font-bold text-slate-400 uppercase">
+                <label className="text-[11px] font-bold text-neutral-400 uppercase">
                   Origin Facility
                 </label>
                 <input
                   type="text"
                   value={origin}
                   onChange={(e) => setOrigin(e.target.value)}
-                  className="mt-1 w-full px-3 py-2 rounded-xl bg-slate-950 border border-slate-800 text-xs text-slate-100 focus:outline-none focus:border-cyan-500"
+                  className="mt-1 w-full px-3 py-2 rounded-xl bg-neutral-950 border border-neutral-800 text-xs text-neutral-100 focus:outline-none focus:border-neutral-500"
                   placeholder="e.g. Serum Institute, Pune"
                   required
                 />
@@ -574,14 +574,14 @@ export default function DestinationConfigCard({
 
               {/* Destination Facility */}
               <div>
-                <label className="text-[11px] font-bold text-slate-400 uppercase">
+                <label className="text-[11px] font-bold text-neutral-400 uppercase">
                   Destination Hospital / Hub
                 </label>
                 <input
                   type="text"
                   value={destination}
                   onChange={(e) => setDestination(e.target.value)}
-                  className="mt-1 w-full px-3 py-2 rounded-xl bg-slate-950 border border-slate-800 text-xs text-slate-100 focus:outline-none focus:border-emerald-500"
+                  className="mt-1 w-full px-3 py-2 rounded-xl bg-neutral-950 border border-neutral-800 text-xs text-neutral-100 focus:outline-none focus:border-emerald-500"
                   placeholder="e.g. District Hospital, Mumbai"
                   required
                 />
@@ -589,7 +589,7 @@ export default function DestinationConfigCard({
 
               {/* Destination Coordinates */}
               <div>
-                <label className="text-[11px] font-bold text-slate-400 uppercase">
+                <label className="text-[11px] font-bold text-neutral-400 uppercase">
                   Destination Latitude
                 </label>
                 <input
@@ -601,12 +601,12 @@ export default function DestinationConfigCard({
                     setDestLat(val);
                     calculateLiveRoute(val, destLng);
                   }}
-                  className="mt-1 w-full px-3 py-2 rounded-xl bg-slate-950 border border-slate-800 text-xs text-slate-100 mono focus:outline-none focus:border-cyan-500"
+                  className="mt-1 w-full px-3 py-2 rounded-xl bg-neutral-950 border border-neutral-800 text-xs text-neutral-100 mono focus:outline-none focus:border-neutral-500"
                 />
               </div>
 
               <div>
-                <label className="text-[11px] font-bold text-slate-400 uppercase">
+                <label className="text-[11px] font-bold text-neutral-400 uppercase">
                   Destination Longitude
                 </label>
                 <input
@@ -618,7 +618,7 @@ export default function DestinationConfigCard({
                     setDestLng(val);
                     calculateLiveRoute(destLat, val);
                   }}
-                  className="mt-1 w-full px-3 py-2 rounded-xl bg-slate-950 border border-slate-800 text-xs text-slate-100 mono focus:outline-none focus:border-cyan-500"
+                  className="mt-1 w-full px-3 py-2 rounded-xl bg-neutral-950 border border-neutral-800 text-xs text-neutral-100 mono focus:outline-none focus:border-neutral-500"
                 />
               </div>
             </div>

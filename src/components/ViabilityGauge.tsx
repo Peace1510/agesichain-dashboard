@@ -12,9 +12,9 @@ interface ViabilityGaugeProps {
 }
 
 const STATUS_COLORS: Record<ShipmentStatus, { stroke: string; text: string; glow: string }> = {
-  NOMINAL:  { stroke: "#10b981", text: "text-emerald-400", glow: "drop-shadow(0 0 12px rgba(16,185,129,0.6))"  },
-  WARNING:  { stroke: "#f59e0b", text: "text-amber-400",   glow: "drop-shadow(0 0 12px rgba(245,158,11,0.6))"  },
-  CRITICAL: { stroke: "#ef4444", text: "text-red-400",     glow: "drop-shadow(0 0 12px rgba(239,68,68,0.6))"   },
+  NOMINAL:  { stroke: "#10b981", text: "text-emerald-400", glow: "drop-shadow(0 0 6px rgba(16,185,129,0.25))"  },
+  WARNING:  { stroke: "#f59e0b", text: "text-amber-400",   glow: "drop-shadow(0 0 6px rgba(245,158,11,0.25))"  },
+  CRITICAL: { stroke: "#f43f5e", text: "text-rose-400",    glow: "drop-shadow(0 0 6px rgba(244,63,94,0.3))"   },
 };
 
 /** Radius of the arc (SVG units). */

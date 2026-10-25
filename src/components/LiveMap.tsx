@@ -381,15 +381,15 @@ export default function LiveMap({
           el.className = "agesichain-container-marker cursor-pointer";
           el.innerHTML = `
             <div class="relative flex items-center justify-center w-10 h-10 -ml-5 -mt-5">
-              <span class="absolute w-8 h-8 rounded-full bg-cyan-400/40 animate-ping"></span>
-              <span class="absolute w-6 h-6 rounded-full bg-cyan-500/30 border border-cyan-400"></span>
-              <span class="relative w-3.5 h-3.5 rounded-full bg-cyan-400 border-2 border-white shadow-[0_0_12px_#22d3ee]"></span>
+              <span class="absolute w-8 h-8 rounded-full bg-emerald-400/30 animate-ping"></span>
+              <span class="absolute w-6 h-6 rounded-full bg-emerald-500/20 border border-emerald-400/60"></span>
+              <span class="relative w-3.5 h-3.5 rounded-full bg-emerald-400 border-2 border-white shadow-[0_0_10px_#10b981]"></span>
             </div>
           `;
 
           const popup = new Popup({ offset: 15, closeButton: false }).setHTML(`
-            <div style="font-family: monospace; font-size: 11px; padding: 4px; color: #e2e8f0; background: #0f172a; border-radius: 6px;">
-              <div style="font-weight: bold; color: #22d3ee; margin-bottom: 2px;">📦 VACCINE SHIPMENT</div>
+            <div style="font-family: monospace; font-size: 11px; padding: 6px 8px; color: #f4f4f5; background: #141518; border: 1px solid #27272a; border-radius: 8px; box-shadow: 0 10px 25px rgba(0,0,0,0.5);">
+              <div style="font-weight: bold; color: #f4f4f5; margin-bottom: 3px;">📦 VACCINE SHIPMENT</div>
               <div>Coords: ${lat.toFixed(5)}, ${lng.toFixed(5)}</div>
               <div>Temp: <b style="color: ${temp && (temp > 8 || temp < 2) ? "#f87171" : "#34d399"}">${temp !== null ? temp.toFixed(1) + "°C" : "—"}</b></div>
               <div>Speed: ${speed.toFixed(1)} km/h</div>
@@ -491,19 +491,19 @@ export default function LiveMap({
   return (
     <div className="glass rounded-2xl overflow-hidden relative flex flex-col border border-white/[0.08] shadow-lg">
       {/* 1. Header Toolbar */}
-      <div className="flex flex-wrap items-center justify-between px-5 py-3.5 border-b border-white/[0.06] bg-slate-900/50 backdrop-blur-md gap-3">
+      <div className="flex flex-wrap items-center justify-between px-5 py-3.5 border-b border-neutral-800 bg-[#141518]/90 backdrop-blur-md gap-3">
         <div className="flex items-center gap-2.5">
-          <div className="h-8 w-8 rounded-lg bg-blue-500/10 border border-blue-500/25 flex items-center justify-center text-blue-400">
+          <div className="h-8 w-8 rounded-lg bg-neutral-800 border border-neutral-700 flex items-center justify-center text-neutral-300">
             <MapPin className="h-4 w-4" />
           </div>
           <div>
-            <h2 className="text-sm font-bold text-slate-100 tracking-tight flex items-center gap-2">
+            <h2 className="text-sm font-bold text-neutral-100 tracking-tight flex items-center gap-2">
               Container Telemetry Map
-              <span className="text-[10px] font-mono px-2 py-0.5 rounded-full bg-blue-950/70 text-blue-300 border border-blue-800/40 font-medium">
+              <span className="text-[10px] font-mono px-2 py-0.5 rounded-full bg-neutral-900 text-neutral-300 border border-neutral-800 font-medium">
                 Live GIS
               </span>
             </h2>
-            <p className="text-[11px] text-slate-400">
+            <p className="text-[11px] text-neutral-400">
               Active route tracking & Real-Time GPS breadcrumb trail
             </p>
           </div>
@@ -511,15 +511,15 @@ export default function LiveMap({
 
         <div className="flex flex-wrap items-center gap-2">
           {/* Style Selector */}
-          <div className="flex items-center rounded-xl bg-slate-950/70 border border-slate-800/90 p-0.5 text-xs">
+          <div className="flex items-center rounded-xl bg-neutral-950 border border-neutral-800 p-0.5 text-xs">
             {(["dark", "satellite", "streets"] as MapTheme[]).map((theme) => (
               <button
                 key={theme}
                 onClick={() => handleThemeChange(theme)}
                 className={`px-2.5 py-1 rounded-lg font-medium transition-all text-[11px] capitalize cursor-pointer ${
                   mapTheme === theme
-                    ? "bg-blue-600 text-white shadow-sm"
-                    : "text-slate-400 hover:text-slate-200"
+                    ? "bg-neutral-100 text-neutral-900 font-bold shadow-sm"
+                    : "text-neutral-400 hover:text-neutral-200"
                 }`}
               >
                 {theme}
@@ -532,18 +532,18 @@ export default function LiveMap({
             <button
               onClick={handleRecenter}
               title="Snap camera to container"
-              className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-slate-950/70 hover:bg-slate-800 border border-slate-800 hover:border-blue-500/40 text-slate-300 hover:text-blue-300 text-xs font-medium transition-all cursor-pointer"
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-neutral-900 hover:bg-neutral-800 border border-neutral-800 hover:border-neutral-700 text-neutral-300 hover:text-white text-xs font-medium transition-all cursor-pointer"
             >
-              <Crosshair className="h-3.5 w-3.5 text-blue-400" />
+              <Crosshair className="h-3.5 w-3.5 text-neutral-400" />
               <span>Center</span>
             </button>
           )}
 
           {/* Speed badge */}
           {isConnected && lat !== null && (
-            <div className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl bg-slate-950/70 border border-slate-800 text-xs mono">
+            <div className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl bg-neutral-950 border border-neutral-800 text-xs mono">
               <Navigation className="h-3.5 w-3.5 text-emerald-400" />
-              <span className="text-slate-300">
+              <span className="text-neutral-300">
                 {speed > 0.5 ? (
                   <>
                     <span className="text-emerald-300 font-bold">
@@ -560,14 +560,14 @@ export default function LiveMap({
 
           {/* Coordinate badge */}
           {lat !== null && lng !== null ? (
-            <div className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl bg-slate-950/70 border border-slate-800 text-[11px] mono text-slate-300">
-              <Satellite className="h-3.5 w-3.5 text-indigo-400" />
+            <div className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl bg-neutral-950 border border-neutral-800 text-[11px] mono text-neutral-300">
+              <Satellite className="h-3.5 w-3.5 text-neutral-400" />
               <span>
                 {lat.toFixed(5)}, {lng.toFixed(5)}
               </span>
             </div>
           ) : (
-            <div className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl bg-slate-950/70 border border-slate-800 text-[11px] mono text-amber-400">
+            <div className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl bg-neutral-950 border border-neutral-800 text-[11px] mono text-amber-400">
               <Compass className="h-3.5 w-3.5 animate-spin" />
               <span>Acquiring GPS...</span>
             </div>
@@ -579,12 +579,12 @@ export default function LiveMap({
       <div className="relative w-full" style={{ height: "420px" }}>
         {/* Waiting placeholder overlay if no GPS coordinates yet */}
         {lat === null && (
-          <div className="absolute inset-0 flex flex-col items-center justify-center gap-3 bg-slate-950/70 z-10 backdrop-blur-xs">
-            <div className="h-10 w-10 rounded-full border-2 border-slate-700 border-t-cyan-400 animate-spin" />
-            <p className="text-sm font-semibold text-slate-300">
+          <div className="absolute inset-0 flex flex-col items-center justify-center gap-3 bg-[#0c0d0f]/80 z-10 backdrop-blur-xs">
+            <div className="h-10 w-10 rounded-full border-2 border-neutral-800 border-t-neutral-300 animate-spin" />
+            <p className="text-sm font-semibold text-neutral-200">
               Waiting for live GPS fix from ESP32...
             </p>
-            <p className="text-xs text-slate-500">
+            <p className="text-xs text-neutral-500">
               Neo-6M GPS satellite lock acquiring outdoors
             </p>
           </div>
@@ -592,12 +592,12 @@ export default function LiveMap({
 
         {/* Floating Quick Route Card */}
         {destinationMeta && destinationMeta.destination !== "—" && (
-          <div className="absolute top-3 left-3 z-10 glass px-3.5 py-2.5 rounded-xl border border-slate-700/80 bg-slate-950/80 text-xs flex items-center gap-3 shadow-xl backdrop-blur-md">
-            <div className="flex items-center gap-1.5 text-cyan-300 font-semibold">
-              <span className="h-2 w-2 rounded-full bg-cyan-400 animate-pulse"></span>
+          <div className="absolute top-3 left-3 z-10 glass px-3.5 py-2.5 rounded-xl border border-neutral-800 bg-[#141518]/90 text-xs flex items-center gap-3 shadow-xl backdrop-blur-md">
+            <div className="flex items-center gap-1.5 text-neutral-200 font-semibold">
+              <span className="h-2 w-2 rounded-full bg-neutral-400 animate-pulse"></span>
               {destinationMeta.origin}
             </div>
-            <span className="text-slate-500">➔</span>
+            <span className="text-neutral-500">➔</span>
             <div className="flex items-center gap-1.5 text-emerald-300 font-semibold">
               <CheckCircle2 className="h-3.5 w-3.5 text-emerald-400" />
               {destinationMeta.destination}
@@ -610,12 +610,12 @@ export default function LiveMap({
       </div>
 
       {/* 3. Footer Status Bar */}
-      <div className="px-5 py-3 border-t border-slate-800/80 bg-slate-950/60 flex items-center justify-between text-[11px] text-slate-400">
+      <div className="px-5 py-3 border-t border-neutral-800 bg-[#101114] flex items-center justify-between text-[11px] text-neutral-400">
         <span className="flex items-center gap-2">
           <span className="h-2 w-2 rounded-full bg-emerald-400 animate-pulse" />
           Agesichain Geospatial Engine · Active 1s GPS Ingestion
         </span>
-        <span className="mono text-slate-400">
+        <span className="mono text-neutral-400">
           {readings.length > 0
             ? `Active Trail: ${Math.min(trailReadings.length, 60)} coordinate points`
             : "No trail recorded yet"}

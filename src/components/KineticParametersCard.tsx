@@ -50,20 +50,20 @@ export default function KineticParametersCard({
       </div>
 
       {/* Equation Banner */}
-      <div className="rounded-xl bg-slate-900/80 border border-white/[0.08] p-4 flex flex-col sm:flex-row items-center justify-between gap-4">
+      <div className="rounded-xl bg-[#141518] border border-neutral-800 p-4 flex flex-col sm:flex-row items-center justify-between gap-4">
         <div className="flex flex-col gap-1 text-center sm:text-left">
-          <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400">
+          <span className="text-[10px] font-bold uppercase tracking-wider text-neutral-400">
             First-Order Arrhenius Rate Equation
           </span>
-          <div className="mono text-sm md:text-base font-semibold text-blue-300 tracking-wide">
+          <div className="mono text-sm md:text-base font-bold text-neutral-100 tracking-wide">
             k = A · exp(-Ea / (R · T_Kelvin))
           </div>
         </div>
-        <div className="flex flex-wrap items-center justify-center gap-3 text-[11px] mono text-slate-400 bg-slate-950/70 px-3 py-2 rounded-lg border border-white/[0.06]">
+        <div className="flex flex-wrap items-center justify-center gap-3 text-[11px] mono text-neutral-300 bg-neutral-900 px-3 py-2 rounded-lg border border-neutral-800">
           <span>Ea = 83,140 J/mol</span>
-          <span className="text-slate-600">·</span>
+          <span className="text-neutral-600">·</span>
           <span>A = 10¹³ hr⁻¹</span>
-          <span className="text-slate-600">·</span>
+          <span className="text-neutral-600">·</span>
           <span>R = 8.314 J/mol·K</span>
         </div>
       </div>
@@ -71,28 +71,28 @@ export default function KineticParametersCard({
       {/* Metrics Grid */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3.5">
         {/* Instantaneous Rate Constant k */}
-        <div className="rounded-xl bg-slate-900/60 border border-white/[0.06] p-4 flex flex-col justify-between hover:border-violet-500/30 transition-colors">
+        <div className="rounded-xl bg-[#141518] border border-neutral-800 p-4 flex flex-col justify-between hover:border-neutral-700 transition-colors">
           <div className="flex items-center justify-between">
-            <span className="text-[10px] uppercase font-bold text-slate-400 tracking-wider">
+            <span className="text-[10px] uppercase font-bold text-neutral-400 tracking-wider">
               Rate Constant (k)
             </span>
-            <span className="h-2 w-2 rounded-full bg-violet-400/80" />
+            <span className="h-2 w-2 rounded-full bg-neutral-400" />
           </div>
           <div className="mt-2 flex items-baseline gap-1">
-            <span className="mono text-2xl font-bold text-violet-300">
+            <span className="mono text-2xl font-bold text-neutral-100">
               {k.toExponential(3)}
             </span>
-            <span className="text-xs text-slate-500">hr⁻¹</span>
+            <span className="text-xs text-neutral-500">hr⁻¹</span>
           </div>
-          <p className="mt-1.5 text-[11px] text-slate-400">
+          <p className="mt-1.5 text-[11px] text-neutral-400">
             Current degradation velocity
           </p>
         </div>
 
         {/* Absolute Temperature in Kelvin */}
-        <div className="rounded-xl bg-slate-900/60 border border-white/[0.06] p-4 flex flex-col justify-between hover:border-amber-500/30 transition-colors">
+        <div className="rounded-xl bg-[#141518] border border-neutral-800 p-4 flex flex-col justify-between hover:border-neutral-700 transition-colors">
           <div className="flex items-center justify-between">
-            <span className="text-[10px] uppercase font-bold text-slate-400 tracking-wider">
+            <span className="text-[10px] uppercase font-bold text-neutral-400 tracking-wider">
               Absolute Temperature
             </span>
             <span className="h-2 w-2 rounded-full bg-amber-400/80" />
@@ -101,26 +101,26 @@ export default function KineticParametersCard({
             <span className="mono text-2xl font-bold text-amber-300">
               {tempK.toFixed(2)}
             </span>
-            <span className="text-xs text-slate-500">K</span>
+            <span className="text-xs text-neutral-500">K</span>
           </div>
-          <p className="mt-1.5 text-[11px] text-slate-400">
+          <p className="mt-1.5 text-[11px] text-neutral-400">
             {currentTemp.toFixed(2)} °C measured
           </p>
         </div>
 
         {/* Time-to-Spoil */}
-        <div className="rounded-xl bg-slate-900/60 border border-white/[0.06] p-4 flex flex-col justify-between hover:border-blue-500/30 transition-colors">
+        <div className="rounded-xl bg-[#141518] border border-neutral-800 p-4 flex flex-col justify-between hover:border-neutral-700 transition-colors">
           <div className="flex items-center justify-between">
-            <span className="text-[10px] uppercase font-bold text-slate-400 tracking-wider">
+            <span className="text-[10px] uppercase font-bold text-neutral-400 tracking-wider">
               Time-to-Spoil (t_spoil)
             </span>
-            <span className="h-2 w-2 rounded-full bg-cyan-400/80" />
+            <span className="h-2 w-2 rounded-full bg-neutral-400" />
           </div>
           <div className="mt-2 flex items-baseline gap-1">
             <span className={cn(
               "mono text-2xl font-bold",
               timeToSpoil === null
-                ? "text-slate-400"
+                ? "text-neutral-400"
                 : timeToSpoil === 0
                 ? "text-rose-400"
                 : timeToSpoil < etaHours
@@ -134,15 +134,15 @@ export default function KineticParametersCard({
                 : `${timeToSpoil.toFixed(1)} hrs`}
             </span>
           </div>
-          <p className="mt-1.5 text-[11px] text-slate-400">
+          <p className="mt-1.5 text-[11px] text-neutral-400">
             Time remaining until 80% potency threshold
           </p>
         </div>
 
         {/* Projected Viability at Destination */}
-        <div className="rounded-xl bg-slate-900/60 border border-white/[0.06] p-4 flex flex-col justify-between hover:border-emerald-500/30 transition-colors">
+        <div className="rounded-xl bg-[#141518] border border-neutral-800 p-4 flex flex-col justify-between hover:border-neutral-700 transition-colors">
           <div className="flex items-center justify-between">
-            <span className="text-[10px] uppercase font-bold text-slate-400 tracking-wider">
+            <span className="text-[10px] uppercase font-bold text-neutral-400 tracking-wider">
               Projected Viability @ Dest
             </span>
             <span className="h-2 w-2 rounded-full bg-emerald-400/80" />
@@ -157,19 +157,19 @@ export default function KineticParametersCard({
               {projViability.toFixed(2)}%
             </span>
           </div>
-          <p className="mt-1.5 text-[11px] text-slate-400">
+          <p className="mt-1.5 text-[11px] text-neutral-400">
             At current temp across {etaHours.toFixed(1)}h ETA
           </p>
         </div>
       </div>
 
       {/* Kinetic Advantage Explainer for Judges & Clinicians */}
-      <div className="rounded-xl bg-blue-950/20 border border-blue-500/25 p-4 flex items-start gap-3.5 text-xs text-slate-300">
-        <div className="h-7 w-7 rounded-lg bg-blue-500/20 border border-blue-500/30 flex items-center justify-center flex-shrink-0 text-blue-400 mt-0.5">
+      <div className="rounded-xl bg-[#141518] border border-neutral-800 p-4 flex items-start gap-3.5 text-xs text-neutral-300">
+        <div className="h-7 w-7 rounded-lg bg-neutral-800 border border-neutral-700 flex items-center justify-center flex-shrink-0 text-neutral-300 mt-0.5">
           <Zap className="h-4 w-4" />
         </div>
         <div className="leading-relaxed">
-          <span className="text-blue-300 font-bold block mb-1">
+          <span className="text-neutral-100 font-bold block mb-1">
             Clinical Distinction: Why Arrhenius Molecular Kinetics?
           </span>
           Conventional cold chain monitors rely on simple binary threshold timers (e.g. &gt; 8°C triggers discard), ignoring cumulative heat integral. Agesichain models continuous thermodynamic reaction velocity: at +18.5°C, rate constant $k$ accelerates exponentially (~100× faster), precisely quantifying actual remaining molecular efficacy without wasteful false discards or dangerous hidden degradation.

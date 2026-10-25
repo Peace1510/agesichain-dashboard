@@ -194,19 +194,19 @@ export default function SessionHistoryView({ onBack }: SessionHistoryViewProps) 
           <button
             type="button"
             onClick={onBack}
-            className="p-2.5 rounded-xl bg-slate-900/90 hover:bg-slate-800 border border-white/[0.08] hover:border-blue-500/40 text-slate-300 hover:text-white transition-all cursor-pointer group flex-shrink-0"
+            className="p-2.5 rounded-xl bg-neutral-900 hover:bg-neutral-800 border border-neutral-800 hover:border-neutral-700 text-neutral-300 hover:text-white transition-all cursor-pointer group flex-shrink-0"
             title="Return to Dashboard"
           >
             <ArrowLeft className="h-4 w-4 group-hover:-translate-x-0.5 transition-transform" />
           </button>
           <div>
-            <div className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-md bg-blue-950/40 border border-blue-500/25 text-[10px] font-mono uppercase font-bold text-blue-300 mb-0.5">
+            <div className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-md bg-neutral-900 border border-neutral-800 text-[10px] font-mono uppercase font-bold text-neutral-300 mb-0.5">
               Historical Compliance Archive
             </div>
             <h1 className="text-lg sm:text-xl font-bold text-white tracking-tight">
               Shipment Session History &amp; Logs
             </h1>
-            <p className="text-xs text-slate-400">
+            <p className="text-xs text-neutral-400">
               Query past cold-chain sessions by date, status, or payload, and generate AI compliance summaries.
             </p>
           </div>
@@ -216,10 +216,10 @@ export default function SessionHistoryView({ onBack }: SessionHistoryViewProps) 
           type="button"
           onClick={fetchSessions}
           disabled={loading}
-          className="p-2.5 rounded-xl bg-slate-900/90 hover:bg-slate-800 border border-white/[0.08] hover:border-blue-500/40 text-slate-300 hover:text-white transition-all cursor-pointer self-start sm:self-center"
+          className="p-2.5 rounded-xl bg-neutral-900 hover:bg-neutral-800 border border-neutral-800 hover:border-neutral-700 text-neutral-300 hover:text-white transition-all cursor-pointer self-start sm:self-center"
           title="Refresh History"
         >
-          <RefreshCw className={`h-4 w-4 ${loading ? "animate-spin text-blue-400" : ""}`} />
+          <RefreshCw className={`h-4 w-4 ${loading ? "animate-spin text-neutral-300" : ""}`} />
         </button>
       </div>
 
@@ -228,24 +228,24 @@ export default function SessionHistoryView({ onBack }: SessionHistoryViewProps) 
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
           {/* Search by Vaccine Name or Code */}
           <div className="relative">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-slate-500" />
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-neutral-500" />
             <input
               type="text"
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
               placeholder="Search vaccine, code, batch..."
-              className="w-full pl-9 pr-3.5 py-2 bg-slate-900/80 border border-white/[0.08] rounded-xl text-xs text-slate-100 placeholder-slate-500 focus:outline-none focus:border-blue-500 transition-colors"
+              className="w-full pl-9 pr-3.5 py-2 bg-neutral-950/80 border border-neutral-800 rounded-xl text-xs text-neutral-100 placeholder-neutral-500 focus:outline-none focus:border-neutral-500 transition-colors"
             />
           </div>
 
           {/* Date Filter */}
           <div className="relative">
-            <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-slate-500 pointer-events-none" />
+            <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-neutral-500 pointer-events-none" />
             <input
               type="date"
               value={selectedDate}
               onChange={(e) => setSelectedDate(e.target.value)}
-              className="w-full pl-9 pr-3.5 py-2 bg-slate-900/80 border border-white/[0.08] rounded-xl text-xs text-slate-100 font-mono focus:outline-none focus:border-blue-500 cursor-pointer transition-colors"
+              className="w-full pl-9 pr-3.5 py-2 bg-neutral-950/80 border border-neutral-800 rounded-xl text-xs text-neutral-100 font-mono focus:outline-none focus:border-neutral-500 cursor-pointer transition-colors"
             />
           </div>
 
@@ -254,7 +254,7 @@ export default function SessionHistoryView({ onBack }: SessionHistoryViewProps) 
             <select
               value={tierFilter}
               onChange={(e) => setTierFilter(e.target.value)}
-              className="w-full px-3 py-2 bg-slate-900/80 border border-white/[0.08] rounded-xl text-xs text-slate-100 focus:outline-none focus:border-blue-500 cursor-pointer transition-colors"
+              className="w-full px-3 py-2 bg-neutral-950/80 border border-neutral-800 rounded-xl text-xs text-neutral-100 focus:outline-none focus:border-neutral-500 cursor-pointer transition-colors"
             >
               <option value="ALL">All Vaccine Tiers</option>
               <option value="STANDARD_REFRIGERATED">+2°C to +8°C Standard</option>
@@ -268,7 +268,7 @@ export default function SessionHistoryView({ onBack }: SessionHistoryViewProps) 
             <select
               value={statusFilter}
               onChange={(e) => setStatusFilter(e.target.value)}
-              className="w-full px-3 py-2 bg-slate-900/80 border border-white/[0.08] rounded-xl text-xs text-slate-100 focus:outline-none focus:border-blue-500 cursor-pointer transition-colors"
+              className="w-full px-3 py-2 bg-neutral-950/80 border border-neutral-800 rounded-xl text-xs text-neutral-100 focus:outline-none focus:border-neutral-500 cursor-pointer transition-colors"
             >
               <option value="ALL">All Statuses</option>
               <option value="COMPLETED">Completed</option>
@@ -297,7 +297,7 @@ export default function SessionHistoryView({ onBack }: SessionHistoryViewProps) 
             Found <strong className="text-white font-mono">{filteredSessions.length}</strong> recorded sessions
           </span>
           {selectedDate && (
-            <span className="font-mono text-blue-400">
+            <span className="font-mono text-neutral-300">
               Filtered for: {new Date(selectedDate + "T00:00:00").toLocaleDateString(undefined, { dateStyle: "medium" })}
             </span>
           )}
@@ -306,15 +306,15 @@ export default function SessionHistoryView({ onBack }: SessionHistoryViewProps) 
 
       {/* History Session Cards List */}
       {loading ? (
-        <div className="p-12 text-center text-blue-400 font-mono text-xs flex items-center justify-center gap-2">
-          <div className="h-4 w-4 border-2 border-blue-400 border-t-transparent rounded-full animate-spin" />
+        <div className="p-12 text-center text-neutral-400 font-mono text-xs flex items-center justify-center gap-2">
+          <div className="h-4 w-4 border-2 border-neutral-400 border-t-transparent rounded-full animate-spin" />
           Loading audit archives...
         </div>
       ) : filteredSessions.length === 0 ? (
         <div className="p-12 text-center glass rounded-2xl border border-white/[0.08] space-y-3">
-          <History className="h-10 w-10 text-slate-600 mx-auto" />
-          <h3 className="text-base font-bold text-slate-200">No matching transit sessions found</h3>
-          <p className="text-xs text-slate-400 max-w-md mx-auto">
+          <History className="h-10 w-10 text-neutral-600 mx-auto" />
+          <h3 className="text-base font-bold text-neutral-200">No matching transit sessions found</h3>
+          <p className="text-xs text-neutral-400 max-w-md mx-auto">
             {sessions.length === 0
               ? "No transit sessions have been conducted yet. Return to the dashboard to start your first session!"
               : "Try adjusting your search criteria, date filter, or classification tier to view matching records."}
@@ -332,24 +332,24 @@ export default function SessionHistoryView({ onBack }: SessionHistoryViewProps) 
             return (
               <div
                 key={session.id}
-                className="p-5 glass rounded-2xl border border-white/[0.08] hover:border-blue-500/30 transition-all flex flex-col lg:flex-row lg:items-center justify-between gap-5 group shadow-sm hover:shadow-md"
+                className="p-5 glass rounded-2xl border border-white/[0.08] hover:border-neutral-700 transition-all flex flex-col lg:flex-row lg:items-center justify-between gap-5 group shadow-sm hover:shadow-md"
               >
                 {/* Left: Code, Name, Tier, Dates */}
                 <div className="space-y-2 max-w-xl">
                   <div className="flex flex-wrap items-center gap-2">
-                    <span className="font-mono text-xs font-bold px-2 py-0.5 rounded-md bg-blue-950/40 text-blue-300 border border-blue-500/30">
+                    <span className="font-mono text-xs font-bold px-2 py-0.5 rounded-md bg-neutral-900 text-neutral-300 border border-neutral-800">
                       {session.sessionCode}
                     </span>
                     <span
                       className={`text-[10px] font-mono px-2 py-0.5 rounded-md font-bold uppercase ${
                         session.status === "ACTIVE"
                           ? "bg-emerald-500/10 text-emerald-300 border border-emerald-500/30 animate-pulse"
-                          : "bg-slate-800 text-slate-300 border border-white/[0.06]"
+                          : "bg-neutral-800 text-neutral-300 border border-neutral-700"
                       }`}
                     >
                       {session.status}
                     </span>
-                    <span className="text-[10px] font-mono font-bold px-2 py-0.5 rounded-md bg-slate-900 text-slate-300 border border-white/[0.08]">
+                    <span className="text-[10px] font-mono font-bold px-2 py-0.5 rounded-md bg-neutral-900 text-neutral-300 border border-neutral-800">
                       {session.vaccineTier}
                     </span>
                     {session.batchNumber && (
@@ -366,11 +366,11 @@ export default function SessionHistoryView({ onBack }: SessionHistoryViewProps) 
                   {/* Route & Timestamp */}
                   <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-slate-400">
                     <span className="flex items-center gap-1.5">
-                      <MapPin className="h-3 w-3 text-cyan-400" />
+                      <MapPin className="h-3 w-3 text-neutral-400" />
                       <span>{session.origin}</span>
-                      <span className="text-slate-600">➔</span>
+                      <span className="text-neutral-600">➔</span>
                       <Truck className="h-3 w-3 text-emerald-400" />
-                      <span className="text-slate-200">{session.destination}</span>
+                      <span className="text-neutral-200">{session.destination}</span>
                     </span>
 
                     <span className="flex items-center gap-1 font-mono text-slate-400">
@@ -424,19 +424,19 @@ export default function SessionHistoryView({ onBack }: SessionHistoryViewProps) 
                     <button
                       type="button"
                       onClick={() => setAiSummarySessionId(session.id)}
-                      className="px-3 py-2 rounded-xl bg-gradient-to-r from-blue-600/20 to-indigo-600/20 hover:from-blue-600/30 hover:to-indigo-600/30 border border-blue-500/40 text-blue-200 hover:text-white text-xs font-semibold flex items-center gap-1.5 shadow-sm transition-all cursor-pointer group"
+                      className="px-3 py-2 rounded-xl bg-neutral-900 hover:bg-neutral-800 border border-neutral-700 hover:border-neutral-600 text-neutral-100 hover:text-white text-xs font-semibold flex items-center gap-1.5 shadow-sm transition-all cursor-pointer group"
                       title="Generate non-technical AI summary for this trip"
                     >
-                      <Sparkles className="h-3.5 w-3.5 text-blue-400 group-hover:scale-110 transition-transform" />
+                      <Sparkles className="h-3.5 w-3.5 text-neutral-300 group-hover:scale-110 transition-transform" />
                       <span>Summarize</span>
                     </button>
 
                     <button
                       type="button"
                       onClick={() => handleInspectSession(session.id)}
-                      className="px-3 py-2 rounded-xl bg-slate-900/90 hover:bg-slate-800 border border-white/[0.08] hover:border-white/[0.15] text-slate-200 text-xs font-semibold flex items-center gap-1.5 shadow-sm transition-all cursor-pointer"
+                      className="px-3 py-2 rounded-xl bg-neutral-900 hover:bg-neutral-800 border border-neutral-800 hover:border-neutral-700 text-neutral-300 hover:text-white text-xs font-semibold flex items-center gap-1.5 shadow-sm transition-all cursor-pointer"
                     >
-                      <FileText className="h-3.5 w-3.5 text-slate-400" />
+                      <FileText className="h-3.5 w-3.5 text-neutral-400" />
                       <span>View Audit</span>
                     </button>
                   </div>
@@ -450,27 +450,27 @@ export default function SessionHistoryView({ onBack }: SessionHistoryViewProps) 
       {/* DETAIL MODAL WITH CHARTS AND LOGS TABLE */}
       {selectedSessionId && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-6 bg-black/85 backdrop-blur-md overflow-y-auto animate-in fade-in duration-200">
-          <div className="relative w-full max-w-5xl glass rounded-3xl p-6 sm:p-8 border border-white/10 shadow-2xl my-8 max-h-[90vh] overflow-y-auto space-y-6">
+          <div className="relative w-full max-w-5xl glass rounded-3xl p-6 sm:p-8 border border-neutral-800 bg-[#121316] shadow-2xl my-8 max-h-[90vh] overflow-y-auto space-y-6">
             {/* Modal Header */}
-            <div className="flex items-start justify-between border-b border-white/[0.08] pb-4">
+            <div className="flex items-start justify-between border-b border-neutral-800 pb-4">
               <div>
                 <div className="flex items-center gap-2 mb-1">
-                  <span className="font-mono text-xs font-bold px-2 py-0.5 rounded-md bg-blue-950/40 text-blue-300 border border-blue-500/30">
+                  <span className="font-mono text-xs font-bold px-2 py-0.5 rounded-md bg-neutral-900 text-neutral-300 border border-neutral-800">
                     {detailedSession?.sessionCode}
                   </span>
-                  <span className="text-[10px] font-mono uppercase px-2 py-0.5 rounded-md bg-slate-900 text-slate-300 border border-white/[0.08]">
+                  <span className="text-[10px] font-mono uppercase px-2 py-0.5 rounded-md bg-neutral-900 text-neutral-300 border border-neutral-800">
                     {detailedSession?.vaccineTier}
                   </span>
                 </div>
                 <h2 className="text-xl sm:text-2xl font-bold text-white tracking-tight">
                   {detailedSession?.vaccineName}
                 </h2>
-                <p className="text-xs text-slate-400 mt-1 flex items-center gap-1.5">
-                  <MapPin className="h-3 w-3 text-cyan-400" />
+                <p className="text-xs text-neutral-400 mt-1 flex items-center gap-1.5">
+                  <MapPin className="h-3 w-3 text-neutral-400" />
                   <span>{detailedSession?.origin}</span>
-                  <span className="text-slate-600">➔</span>
+                  <span className="text-neutral-600">➔</span>
                   <Truck className="h-3 w-3 text-emerald-400" />
-                  <span className="text-slate-300">{detailedSession?.destination}</span>
+                  <span className="text-neutral-300">{detailedSession?.destination}</span>
                 </p>
               </div>
 
@@ -480,19 +480,19 @@ export default function SessionHistoryView({ onBack }: SessionHistoryViewProps) 
                     <button
                       type="button"
                       onClick={() => setAiSummarySessionId(detailedSession.id)}
-                      className="px-3 py-2 rounded-xl bg-gradient-to-r from-blue-600/20 to-indigo-600/20 hover:from-blue-600/30 hover:to-indigo-600/30 border border-blue-500/40 text-blue-200 hover:text-white text-xs font-semibold flex items-center gap-1.5 transition-colors cursor-pointer"
+                      className="px-3 py-2 rounded-xl bg-neutral-900 hover:bg-neutral-800 border border-neutral-700 text-neutral-200 hover:text-white text-xs font-semibold flex items-center gap-1.5 transition-colors cursor-pointer"
                       title="Generate AI Trip Summary"
                     >
-                      <Sparkles className="h-3.5 w-3.5 text-blue-400" />
+                      <Sparkles className="h-3.5 w-3.5 text-neutral-400" />
                       <span className="hidden sm:inline">Summarize</span>
                     </button>
                     <button
                       type="button"
                       onClick={() => exportSessionJson(detailedSession)}
-                      className="px-3 py-2 rounded-xl bg-slate-900/90 hover:bg-slate-800 border border-white/[0.08] text-slate-200 text-xs flex items-center gap-1.5 transition-colors cursor-pointer"
+                      className="px-3 py-2 rounded-xl bg-neutral-900 hover:bg-neutral-800 border border-neutral-800 text-neutral-200 text-xs flex items-center gap-1.5 transition-colors cursor-pointer"
                       title="Export Audit JSON"
                     >
-                      <Download className="h-3.5 w-3.5 text-slate-400" />
+                      <Download className="h-3.5 w-3.5 text-neutral-400" />
                       <span className="hidden sm:inline">Export Audit</span>
                     </button>
                   </>
@@ -500,7 +500,7 @@ export default function SessionHistoryView({ onBack }: SessionHistoryViewProps) 
                 <button
                   type="button"
                   onClick={handleCloseDetail}
-                  className="p-2 rounded-xl text-slate-400 hover:text-white hover:bg-slate-800 transition-colors cursor-pointer"
+                  className="p-2 rounded-xl text-neutral-400 hover:text-white hover:bg-neutral-800 transition-colors cursor-pointer"
                 >
                   <X className="h-5 w-5" />
                 </button>
@@ -508,16 +508,16 @@ export default function SessionHistoryView({ onBack }: SessionHistoryViewProps) 
             </div>
 
             {detailLoading ? (
-              <div className="py-20 text-center text-blue-400 font-mono text-xs flex items-center justify-center gap-2">
-                <div className="h-4 w-4 border-2 border-blue-400 border-t-transparent rounded-full animate-spin" />
+              <div className="py-20 text-center text-neutral-400 font-mono text-xs flex items-center justify-center gap-2">
+                <div className="h-4 w-4 border-2 border-neutral-400 border-t-transparent rounded-full animate-spin" />
                 Retrieving telemetry logs...
               </div>
             ) : detailedSession ? (
               <div className="space-y-6">
                 {/* Audit Summary Grid */}
                 <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-                  <div className="p-3.5 rounded-xl bg-slate-900/60 border border-white/[0.06]">
-                    <span className="text-[10px] uppercase font-mono text-slate-400 block font-bold">Allowed Range</span>
+                  <div className="p-3.5 rounded-xl bg-[#16171b] border border-neutral-800">
+                    <span className="text-[10px] uppercase font-mono text-neutral-400 block font-bold">Allowed Range</span>
                     <span className="font-mono text-sm font-bold text-slate-200">
                       {detailedSession.minTemp}°C to {detailedSession.maxTemp}°C
                     </span>
@@ -612,7 +612,7 @@ export default function SessionHistoryView({ onBack }: SessionHistoryViewProps) 
                             <td className="p-2.5 pl-3 text-slate-400">
                               {new Date(log.timestamp).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit", second: "2-digit" })}
                             </td>
-                            <td className={`p-2.5 font-bold ${log.isExcursion ? "text-red-400" : "text-cyan-300"}`}>
+                            <td className={`p-2.5 font-bold ${log.isExcursion ? "text-rose-400" : "text-emerald-400"}`}>
                               {log.temperature.toFixed(2)}°C
                             </td>
                             <td className="p-2.5 text-slate-300">{log.humidity.toFixed(1)}%</td>

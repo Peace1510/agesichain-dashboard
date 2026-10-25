@@ -33,7 +33,7 @@ export default function RootLayout({
           href="https://unpkg.com/maplibre-gl@5.6.0/dist/maplibre-gl.css"
         />
       </head>
-      <body className="min-h-full flex flex-col bg-[#04070f] text-slate-100 selection:bg-cyan-500/30 selection:text-cyan-200">
+      <body className="min-h-full flex flex-col bg-[#0c0d0f] text-neutral-100 selection:bg-neutral-700/60 selection:text-white">
         <Providers>{children}</Providers>
       </body>
     </html>

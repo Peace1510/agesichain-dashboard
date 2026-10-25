@@ -363,7 +363,7 @@ export default function ColdChainDashboardPage() {
                 <span className="text-[11px] font-bold uppercase tracking-wider text-slate-400">
                   Kinetic Potency State
                 </span>
-                <span className="text-[10px] mono text-blue-400 font-bold bg-blue-950/60 border border-blue-800/40 px-2 py-0.5 rounded-full">
+                <span className="text-[10px] mono text-neutral-300 font-bold bg-neutral-900 border border-neutral-800 px-2.5 py-0.5 rounded-full">
                   {activeSession?.sessionCode || "ACTIVE"}
                 </span>
               </div>
@@ -528,32 +528,32 @@ export default function ColdChainDashboardPage() {
           />
 
           {/* DEEP TELEMETRY & ANALYTICS HUB (UNIFIED TABS) */}
-          <div className="glass rounded-2xl p-5 border border-white/[0.08] shadow-lg flex flex-col gap-4">
+          <div className="glass rounded-2xl p-5 border border-white/[0.07] shadow-lg flex flex-col gap-4">
             {/* Header & Segmented Tab Navigation */}
             <div className="flex flex-wrap items-center justify-between gap-3 border-b border-white/[0.06] pb-3.5">
               <div className="flex items-center gap-2.5">
-                <div className="h-8 w-8 rounded-lg bg-indigo-500/10 border border-indigo-500/25 flex items-center justify-center text-indigo-400">
+                <div className="h-8 w-8 rounded-lg bg-neutral-800 border border-neutral-700/80 flex items-center justify-center text-neutral-300">
                   <Activity className="h-4 w-4" />
                 </div>
                 <div>
-                  <h2 className="text-sm font-bold text-slate-100 tracking-tight">
-                    Telemetry & Kinetic Analytics Hub
+                  <h2 className="text-sm font-bold text-white tracking-tight">
+                    Telemetry &amp; Kinetic Analytics Hub
                   </h2>
-                  <p className="text-[11px] text-slate-400">
+                  <p className="text-[11px] text-neutral-400">
                     Switch between time-series curves, Arrhenius kinetics, and packet stream
                   </p>
                 </div>
               </div>
 
               {/* Segmented Controller */}
-              <div className="flex items-center rounded-xl bg-slate-950/80 border border-white/[0.08] p-1 text-xs">
+              <div className="flex items-center rounded-xl bg-neutral-900/90 border border-neutral-800 p-1 text-xs">
                 <button
                   onClick={() => setAnalyticsTab("CHARTS")}
                   className={cn(
                     "flex items-center gap-1.5 px-3 py-1.5 rounded-lg font-semibold transition-all cursor-pointer text-xs",
                     analyticsTab === "CHARTS"
-                      ? "bg-blue-600 text-white shadow-sm"
-                      : "text-slate-400 hover:text-slate-200"
+                      ? "bg-neutral-100 text-neutral-900 font-bold shadow-sm"
+                      : "text-neutral-400 hover:text-neutral-200"
                   )}
                 >
                   <TrendingDown className="h-3.5 w-3.5" />
@@ -565,8 +565,8 @@ export default function ColdChainDashboardPage() {
                   className={cn(
                     "flex items-center gap-1.5 px-3 py-1.5 rounded-lg font-semibold transition-all cursor-pointer text-xs",
                     analyticsTab === "KINETICS"
-                      ? "bg-blue-600 text-white shadow-sm"
-                      : "text-slate-400 hover:text-slate-200"
+                      ? "bg-neutral-100 text-neutral-900 font-bold shadow-sm"
+                      : "text-neutral-400 hover:text-neutral-200"
                   )}
                 >
                   <Gauge className="h-3.5 w-3.5" />
@@ -578,8 +578,8 @@ export default function ColdChainDashboardPage() {
                   className={cn(
                     "flex items-center gap-1.5 px-3 py-1.5 rounded-lg font-semibold transition-all cursor-pointer text-xs",
                     analyticsTab === "LOGS"
-                      ? "bg-blue-600 text-white shadow-sm"
-                      : "text-slate-400 hover:text-slate-200"
+                      ? "bg-neutral-100 text-neutral-900 font-bold shadow-sm"
+                      : "text-neutral-400 hover:text-neutral-200"
                   )}
                 >
                   <Table className="h-3.5 w-3.5" />

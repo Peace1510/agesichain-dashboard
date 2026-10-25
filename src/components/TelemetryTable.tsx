@@ -20,36 +20,36 @@ export default function TelemetryTable({ readings, className }: TelemetryTablePr
   return (
     <div className={cn("flex flex-col gap-4 pt-1", className)}>
       {/* Subheader */}
-      <div className="flex flex-wrap items-center justify-between gap-2.5 pb-2 border-b border-white/[0.06]">
+      <div className="flex flex-wrap items-center justify-between gap-2.5 pb-2 border-b border-neutral-800/70">
         <div className="flex items-center gap-2">
-          <div className="h-7 w-7 rounded-lg bg-blue-500/10 border border-blue-500/20 flex items-center justify-center text-blue-400">
+          <div className="h-7 w-7 rounded-lg bg-neutral-800/80 border border-neutral-700/60 flex items-center justify-center text-neutral-300">
             <Table className="h-4 w-4" />
           </div>
           <div>
-            <h3 className="text-xs font-bold text-slate-200 tracking-tight">
+            <h3 className="text-xs font-bold text-neutral-200 tracking-tight">
               Ingested Telemetry Stream
             </h3>
-            <p className="text-[11px] text-slate-400">
+            <p className="text-[11px] text-neutral-400">
               Raw sensor packets received via ESP32 hardware radio or simulation pipeline
             </p>
           </div>
         </div>
         <div className="flex items-center gap-2">
-          <span className="mono text-[11px] font-semibold text-blue-300 bg-blue-950/40 border border-blue-500/30 px-2.5 py-1 rounded-lg">
+          <span className="mono text-[11px] font-semibold text-neutral-300 bg-neutral-900 border border-neutral-800 px-2.5 py-1 rounded-lg">
             {readings.length} Packets Received
           </span>
         </div>
       </div>
 
       {readings.length === 0 ? (
-        <div className="py-12 text-center text-slate-400 text-xs rounded-xl bg-slate-900/40 border border-white/[0.06]">
+        <div className="py-12 text-center text-neutral-400 text-xs rounded-xl bg-neutral-900/40 border border-neutral-800">
           No telemetry logged yet. Data packets will populate automatically upon arrival.
         </div>
       ) : (
-        <div className="overflow-x-auto max-h-80 overflow-y-auto rounded-xl border border-white/[0.08] bg-slate-950/60 shadow-inner">
+        <div className="overflow-x-auto max-h-80 overflow-y-auto rounded-xl border border-neutral-800 bg-[#121316] shadow-inner">
           <table className="w-full text-left border-collapse text-xs">
             <thead>
-              <tr className="border-b border-white/[0.08] text-[10px] uppercase font-bold tracking-wider text-slate-400 sticky top-0 bg-slate-900/95 backdrop-blur z-10">
+              <tr className="border-b border-neutral-800 text-[10px] uppercase font-bold tracking-wider text-neutral-400 sticky top-0 bg-[#17181c] backdrop-blur z-10">
                 <th className="py-2.5 px-3">Timestamp</th>
                 <th className="py-2.5 px-3">Device ID</th>
                 <th className="py-2.5 px-3">Temp (°C)</th>
@@ -60,7 +60,7 @@ export default function TelemetryTable({ readings, className }: TelemetryTablePr
                 <th className="py-2.5 px-3">k (hr⁻¹)</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-white/[0.04]">
+            <tbody className="divide-y divide-neutral-800/50">
               {reversed.map((r, i) => {
                 const isSafe = r.temperature >= 2.0 && r.temperature <= 8.0;
                 const { rate_constant_per_hour: k } = arrheniusRateConstant({

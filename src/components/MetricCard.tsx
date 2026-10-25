@@ -16,34 +16,34 @@ interface MetricCardProps {
 
 const ACCENT_MAP = {
   cyan: {
-    iconBg: "bg-blue-500/10 text-blue-400 border-blue-500/20",
-    val: "text-slate-100",
-    topLine: "from-blue-500/40 via-blue-500/10 to-transparent",
-    sub: "text-slate-400",
+    iconBg: "bg-neutral-800/80 text-neutral-300 border-neutral-700/80",
+    val: "text-white",
+    topLine: "from-neutral-700/50 via-neutral-700/10 to-transparent",
+    sub: "text-neutral-400",
   },
   emerald: {
     iconBg: "bg-emerald-500/10 text-emerald-400 border-emerald-500/20",
-    val: "text-emerald-300",
+    val: "text-emerald-400",
     topLine: "from-emerald-500/40 via-emerald-500/10 to-transparent",
-    sub: "text-emerald-400/80",
+    sub: "text-emerald-400/90",
   },
   amber: {
     iconBg: "bg-amber-500/10 text-amber-400 border-amber-500/20",
-    val: "text-amber-300",
+    val: "text-amber-400",
     topLine: "from-amber-500/40 via-amber-500/10 to-transparent",
-    sub: "text-amber-400/80",
+    sub: "text-amber-400/90",
   },
   red: {
     iconBg: "bg-rose-500/10 text-rose-400 border-rose-500/20",
-    val: "text-rose-300",
+    val: "text-rose-400",
     topLine: "from-rose-500/40 via-rose-500/10 to-transparent",
-    sub: "text-rose-400/80",
+    sub: "text-rose-400/90",
   },
   violet: {
-    iconBg: "bg-indigo-500/10 text-indigo-400 border-indigo-500/20",
-    val: "text-slate-100",
-    topLine: "from-indigo-500/40 via-indigo-500/10 to-transparent",
-    sub: "text-slate-400",
+    iconBg: "bg-neutral-800/80 text-neutral-200 border-neutral-700/80",
+    val: "text-white",
+    topLine: "from-neutral-700/50 via-neutral-700/10 to-transparent",
+    sub: "text-neutral-400",
   },
 };
 
