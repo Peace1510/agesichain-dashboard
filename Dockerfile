@@ -15,8 +15,10 @@ RUN npx prisma generate
 
 # Build standalone Next.js production bundle
 ENV NEXT_TELEMETRY_DISABLED=1
+ENV NODE_OPTIONS="--max-old-space-size=1536"
 ENV DATABASE_URL="postgresql://placeholder:placeholder@localhost:5432/placeholder"
 RUN npm run build
+
 
 # Runner stage
 FROM node:20-alpine AS runner
